@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group
 from django.db import DataError
 from django.db import IntegrityError
 from django.utils.module_loading import import_string
-
+from ldap_sync.service import service
 from ldap_sync.utils import get_setting
 
 
@@ -188,17 +188,14 @@ class Command(BaseCommand):
         base_pass = get_setting('LDAP_SYNC_BASE_PASS', strict=True)
         base = get_setting('LDAP_SYNC_BASE', strict=True)
 
-        ldap.set_option(ldap.OPT_REFERRALS, 0)
-        l = PagedLDAPObject(uri)
-        l.protocol_version = 3
-        try:
-            l.simple_bind_s(base_user, base_pass)
-        except ldap.LDAPError:
-            logger.error("Error connecting to LDAP server %s" % uri)
-            raise
+        # ldap config
+        service(uri)
 
-        results = l.paged_search_ext_s(base, ldap.SCOPE_SUBTREE, filter, attrlist=attributes, serverctrls=None)
-        l.unbind_s()
+        # ldap authentication
+        service.login(base_user, base_pass)
+
+        # ldap search
+        results = service.search(base, filter, attributes)
         return results
 
 
