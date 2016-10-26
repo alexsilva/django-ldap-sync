@@ -1,9 +1,17 @@
 #!/usr/bin/env python
+import pip
+import sys
 
 from setuptools import find_packages
 from setuptools import setup
 
 from ldap_sync import __version__ as version
+
+
+def install(*packages):
+    """Install a new package using pip"""
+    for package in packages:
+        pip.main(['install', package])
 
 
 with open('README.rst') as f:
@@ -21,7 +29,7 @@ setup(
     download_url='https://github.com/jbittel/django-ldap-sync',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['python-ldap>=2.4.13'],
+    install_requires=[],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
@@ -35,3 +43,9 @@ setup(
     ],
     keywords=['django', 'ldap', 'active directory', 'synchronize', 'sync'],
 )
+
+if __name__ == '__main__':
+    if sys.platform.startswith('win'):
+        install('pyad')
+    else:
+        install('python-ldap>=2.4.13')
