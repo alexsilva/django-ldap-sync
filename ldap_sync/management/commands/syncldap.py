@@ -1,9 +1,5 @@
 import logging
 
-import ldap
-from ldap.ldapobject import LDAPObject
-from ldap.controls import SimplePagedResultsControl
-
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
@@ -212,45 +208,3 @@ class Command(BaseCommand):
         # ldap search
         results = service.search(base, filter, attributes, objecttype)
         return results
-
-
-class PagedResultsSearchObject:
-    """
-    Taken from the python-ldap paged_search_ext_s.py demo, showing how to use
-    the paged results control: https://bitbucket.org/jaraco/python-ldap/
-    """
-    page_size = get_setting('LDAP_SYNC_PAGE_SIZE', default=100)
-
-    def paged_search_ext_s(self, base, scope, filterstr='(objectClass=*)', attrlist=None, attrsonly=0,
-                           serverctrls=None, clientctrls=None, timeout=-1, sizelimit=0):
-        """
-        Behaves exactly like LDAPObject.search_ext_s() but internally uses the
-        simple paged results control to retrieve search results in chunks.
-        """
-        req_ctrl = SimplePagedResultsControl(True, size=self.page_size, cookie='')
-
-        # Send first search request
-        msgid = self.search_ext(base, ldap.SCOPE_SUBTREE, filterstr, attrlist=attrlist,
-                                serverctrls=(serverctrls or []) + [req_ctrl])
-        results = []
-
-        while True:
-            rtype, rdata, rmsgid, rctrls = self.result3(msgid)
-            results.extend(rdata)
-            # Extract the simple paged results response control
-            pctrls = [c for c in rctrls if c.controlType == SimplePagedResultsControl.controlType]
-
-            if pctrls:
-                if pctrls[0].cookie:
-                    # Copy cookie from response control to request control
-                    req_ctrl.cookie = pctrls[0].cookie
-                    msgid = self.search_ext(base, ldap.SCOPE_SUBTREE, filterstr, attrlist=attrlist,
-                                            serverctrls=(serverctrls or []) + [req_ctrl])
-                else:
-                    break
-
-        return results
-
-
-class PagedLDAPObject(LDAPObject, PagedResultsSearchObject):
-    pass
