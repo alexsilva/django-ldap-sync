@@ -1,18 +1,9 @@
 #!/usr/bin/env python
-import pip
-import sys
 
 from setuptools import find_packages
 from setuptools import setup
 
 from ldap_sync import __version__ as version
-
-
-def install(*packages):
-    """Install a new package using pip"""
-    for package in packages:
-        pip.main(['install', package])
-
 
 with open('README.rst') as f:
     readme = f.read()
@@ -43,9 +34,3 @@ setup(
     ],
     keywords=['django', 'ldap', 'active directory', 'synchronize', 'sync'],
 )
-
-if __name__ == '__main__':
-    if sys.platform.startswith('win'):
-        install('pyad')
-    else:
-        install('python-ldap>=2.4.13')
