@@ -51,6 +51,7 @@ class Command(BaseCommand):
         """Synchronize users with local user model."""
         model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
+        removed_user_groups = get_setting('LDAP_SYNC_REMOVED_USER_GROUPS', default=[])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
             username_field = getattr(model, 'USERNAME_FIELD', 'username')
@@ -120,7 +121,12 @@ class Command(BaseCommand):
                     ldap_usernames.add(username)
 
         if removed_user_callbacks:
-            django_usernames = set(model.objects.values_list(username_field, flat=True))
+            if removed_user_groups is None:
+                users = model.objects.values_list(username_field, flat=True)
+            else:
+                users = model.objects.filter(groups__name__in=removed_user_groups)\
+                    .values_list(username_field, flat=True)
+            django_usernames = set(users)
             for username in django_usernames - ldap_usernames:
                 user = model.objects.get(**{username_field: username})
                 for path in removed_user_callbacks:
