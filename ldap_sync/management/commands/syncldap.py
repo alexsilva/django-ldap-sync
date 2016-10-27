@@ -73,7 +73,7 @@ class Command(BaseCommand):
                         if isinstance(attribute[0], basestring):
                             value = attribute[0].decode('utf-8')
                         else:
-                            value = None
+                            value = attribute[0]
                         defaults[user_attributes[name]] = value
                     except KeyError:
                         pass
