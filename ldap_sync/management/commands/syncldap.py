@@ -157,7 +157,11 @@ class Command(BaseCommand):
             defaults = {}
             try:
                 for name, attribute in ldap_attributes.items():
-                    defaults[group_attributes[name]] = attribute[0].decode('utf-8')
+                    if isinstance(attribute[0], basestring):
+                        value = attribute[0].decode('utf-8')
+                    else:
+                        value = attribute[0]
+                    defaults[group_attributes[name]] = value
             except AttributeError:
                 # In some cases attrs is a list instead of a dict; skip these invalid groups
                 continue
