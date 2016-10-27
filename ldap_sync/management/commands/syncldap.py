@@ -71,7 +71,11 @@ class Command(BaseCommand):
             try:
                 for name, attribute in attributes.items():
                     try:
-                        defaults[user_attributes[name]] = attribute[0].decode('utf-8')
+                        if isinstance(attribute[0], basestring):
+                            value = attribute[0].decode('utf-8')
+                        else:
+                            value = None
+                        defaults[user_attributes[name]] = value
                     except KeyError:
                         pass
             except AttributeError:
