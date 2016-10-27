@@ -28,8 +28,7 @@ class Command(BaseCommand):
             self.sync_ldap_groups(ldap_groups)
 
         ldap_users = self.get_ldap_users()
-        if ldap_users:
-            self.sync_ldap_users(ldap_users)
+        self.sync_ldap_users(ldap_users)
 
     def get_ldap_users(self):
         """Retrieve user data from LDAP server."""
