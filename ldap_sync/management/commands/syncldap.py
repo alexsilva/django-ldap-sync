@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group
 from django.db import DataError
 from django.db import IntegrityError
 from django.utils.module_loading import import_string
-from ldap_sync.service import service
+from ldap_sync.service import Service
 from ldap_sync.utils import get_setting
 
 
@@ -43,7 +43,8 @@ class Command(BaseCommand):
         user_extra_attributes = get_setting('LDAP_SYNC_USER_EXTRA_ATTRIBUTES', default=[])
         user_keys.update(user_extra_attributes)
 
-        users = self.ldap_search(user_filter, user_keys)
+        users = self.ldap_search(user_filter, user_keys,
+                                 Service.ObjectTypes.USERS)
         logger.debug("Retrieved %d users" % len(users))
         return users
 
@@ -135,7 +136,8 @@ class Command(BaseCommand):
 
         group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES', strict=True)
 
-        groups = self.ldap_search(group_filter, group_attributes.keys())
+        groups = self.ldap_search(group_filter, group_attributes.keys(),
+                                  Service.ObjectTypes.GROUPS)
         logger.debug("Retrieved %d groups" % len(groups))
         return groups
 
@@ -178,7 +180,7 @@ class Command(BaseCommand):
 
         logger.info("Groups are synchronized")
 
-    def ldap_search(self, filter, attributes):
+    def ldap_search(self, filter, attributes, objecttype=None):
         """
         Query the configured LDAP server with the provided search filter and
         attribute list.
@@ -189,13 +191,13 @@ class Command(BaseCommand):
         base = get_setting('LDAP_SYNC_BASE', strict=True)
 
         # ldap config
-        service(uri)
+        service = Service(uri)
 
         # ldap authentication
         service.login(base_user, base_pass)
 
         # ldap search
-        results = service.search(base, filter, attributes)
+        results = service.search(base, filter, attributes, objecttype)
         return results
 
 
