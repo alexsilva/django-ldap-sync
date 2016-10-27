@@ -1,4 +1,5 @@
-import sys
+from ldap_sync.utils import get_setting
+from django.utils.module_loading import import_string
 
 
 class Service(object):
@@ -9,7 +10,7 @@ class Service(object):
         USERS = "users"
 
     def __init__(self, uri):
-        pyad.set_defaults(ldap_server=uri)
+        self.uri = uri
 
     def search(self, base, filter, attributes, objectype=None):
         """Make a search"""
@@ -19,35 +20,8 @@ class Service(object):
         """bind"""
         raise NotImplemented
 
+# External service implementation.
+service_string = get_setting("LDAP_SYNC_SERVICE", default=None)
 
-if sys.platform.startswith("win"):
-    from pyad import *
-
-
-    class PyadService(Service):
-        """Interface implementation"""
-
-        def _search_users(self, base, filter, attributes):
-            """Search for users"""
-            groups = adgroup.ADGroup.from_dn(filter + "," + base)
-            users = []
-            for user in groups.get_members():
-                users.append((user.cn, {k: (getattr(user, k),) for k in attributes}))
-            return users
-
-        def _search_groups(self, base, filter, attributes):
-            return []
-
-        def search(self, base, filter, attributes, objectype=None):
-            """generic search"""
-            return getattr(self, '_search_' + objectype)(base, filter, attributes)
-
-        def login(self, username, password):
-            """make login"""
-            pyad.set_defaults(username=username, password=password)
-
-
-    Service = PyadService
-else:
-
-    raise NotImplemented
+if isinstance(service_string, basestring):
+    Service = import_string(service_string)
