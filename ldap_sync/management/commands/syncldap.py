@@ -105,7 +105,8 @@ class Command(BaseCommand):
             else:
                 if removed_user_groups:
                     # Add the groups that separate the ldap users
-                    user.groups.add(Group.objects.filter(name__in=removed_user_groups))
+                    for group in Group.objects.filter(name__in=removed_user_groups):
+                        user.groups.add(group)
                 updated = False
                 if created:
                     logger.debug("Created user %s" % username)
