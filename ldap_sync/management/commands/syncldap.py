@@ -70,7 +70,7 @@ class Command(BaseCommand):
             try:
                 for name, attribute in attributes.items():
                     try:
-                        if isinstance(attribute[0], basestring):
+                        if isinstance(attribute[0], str):
                             value = attribute[0].decode('utf-8')
                         else:
                             value = attribute[0]
@@ -174,7 +174,7 @@ class Command(BaseCommand):
             defaults = {}
             try:
                 for name, attribute in ldap_attributes.items():
-                    if isinstance(attribute[0], basestring):
+                    if isinstance(attribute[0], str):
                         value = attribute[0].decode('utf-8')
                     else:
                         value = attribute[0]
