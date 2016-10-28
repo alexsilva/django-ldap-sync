@@ -87,6 +87,8 @@ class Command(BaseCommand):
                 logger.warning("User is missing a required attribute '%s'" % username_field)
                 continue
 
+            old_username = username
+
             # username changes
             for path in username_callbacks:
                 callback = import_string(path)
@@ -101,7 +103,7 @@ class Command(BaseCommand):
             try:
                 user, created = model.objects.get_or_create(**kwargs)
             except (IntegrityError, DataError) as e:
-                logger.error("Error creating user %s: %s" % (username, e))
+                logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
                 if removed_user_groups:
                     # Add the groups that separate the ldap users
@@ -109,7 +111,7 @@ class Command(BaseCommand):
                         user.groups.add(group)
                 updated = False
                 if created:
-                    logger.debug("Created user %s" % username)
+                    logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
                 else:
                     for name, attr in defaults.items():
@@ -118,7 +120,7 @@ class Command(BaseCommand):
                             setattr(user, name, attr)
                             updated = True
                     if updated:
-                        logger.debug("Updated user %s" % username)
+                        logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
                 for path in user_callbacks:
                     callback = import_string(path)
@@ -141,7 +143,7 @@ class Command(BaseCommand):
                 for path in removed_user_callbacks:
                     callback = import_string(path)
                     callback(user)
-                    logger.debug("Called %s for user %s" % (path, username))
+                    logger.debug("Called %s for user %s" % (path, user))
 
         logger.info("Users are synchronized")
 
