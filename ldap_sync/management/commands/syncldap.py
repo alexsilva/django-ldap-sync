@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 continue
 
             try:
-                username = defaults[username_field].lower()
+                username = defaults[username_field]
             except KeyError:
                 logger.warning("User is missing a required attribute '%s'" % username_field)
                 continue
@@ -91,9 +91,10 @@ class Command(BaseCommand):
             for path in username_callbacks:
                 callback = import_string(path)
                 username = callback(username, prefix=u','.join(removed_user_groups))
+                defaults[username_field] = username
 
             kwargs = {
-                username_field + '__iexact': username,
+                username_field + '__exact': username,
                 'defaults': defaults,
             }
 
