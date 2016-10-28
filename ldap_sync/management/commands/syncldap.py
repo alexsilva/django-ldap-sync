@@ -48,6 +48,9 @@ class Command(BaseCommand):
         model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
         removed_user_groups = get_setting('LDAP_SYNC_REMOVED_USER_GROUPS', default=[])
+        username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[
+            'ldap_sync.encoder.hash_md5'
+        ])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
             username_field = getattr(model, 'USERNAME_FIELD', 'username')
@@ -83,6 +86,11 @@ class Command(BaseCommand):
             except KeyError:
                 logger.warning("User is missing a required attribute '%s'" % username_field)
                 continue
+
+            # username changes
+            for path in username_callbacks:
+                callback = import_string(path)
+                username = callback(username, prefix=u','.join(removed_user_groups))
 
             kwargs = {
                 username_field + '__iexact': username,
