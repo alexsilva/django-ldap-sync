@@ -117,7 +117,7 @@ class Command(BaseCommand):
                     ldap_usernames.add(username)
 
         if removed_user_callbacks:
-            if removed_user_groups is None:
+            if not removed_user_groups:
                 users = model.objects.values_list(username_field, flat=True)
             else:
                 users = model.objects.filter(groups__name__in=removed_user_groups)\
