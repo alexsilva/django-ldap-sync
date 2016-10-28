@@ -102,6 +102,9 @@ class Command(BaseCommand):
             except (IntegrityError, DataError) as e:
                 logger.error("Error creating user %s: %s" % (username, e))
             else:
+                if removed_user_groups:
+                    # Add the groups that separate the ldap users
+                    user.groups.add(Group.objects.filter(name__in=removed_user_groups))
                 updated = False
                 if created:
                     logger.debug("Created user %s" % username)
