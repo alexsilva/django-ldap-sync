@@ -47,7 +47,8 @@ class Command(BaseCommand):
         """Synchronize users with local user model."""
         model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
-        removed_user_queryset_callback = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACK')
+        removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
+                                                     default=[])
         username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
@@ -127,9 +128,10 @@ class Command(BaseCommand):
 
         if removed_user_callbacks:
             queryset = model.objects.all()
-            if removed_user_queryset_callback:
-                callback = import_string(removed_user_queryset_callback)
-                queryset = callback(queryset)
+            if removed_user_queryset_callbacks:
+                for path in removed_user_queryset_callbacks:
+                    callback = import_string(path)
+                    queryset = callback(queryset)
             users = queryset.values_list(username_field, flat=True)
             django_usernames = set(users)
             for username in django_usernames - ldap_usernames:
