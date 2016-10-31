@@ -47,7 +47,7 @@ class Command(BaseCommand):
         """Synchronize users with local user model."""
         model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
-        removed_user_groups = get_setting('LDAP_SYNC_REMOVED_USER_GROUPS', default=[])
+        removed_user_queryset_callback = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACK')
         username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
@@ -103,10 +103,6 @@ class Command(BaseCommand):
             except (IntegrityError, DataError) as e:
                 logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
-                if removed_user_groups:
-                    # Add the groups that separate the ldap users
-                    for group in Group.objects.filter(name__in=removed_user_groups):
-                        user.groups.add(group)
                 updated = False
                 if created:
                     logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
@@ -130,11 +126,11 @@ class Command(BaseCommand):
                     ldap_usernames.add(username)
 
         if removed_user_callbacks:
-            if not removed_user_groups:
-                users = model.objects.values_list(username_field, flat=True)
-            else:
-                users = model.objects.filter(groups__name__in=removed_user_groups)\
-                    .values_list(username_field, flat=True)
+            queryset = model.objects.all()
+            if removed_user_queryset_callback:
+                callback = import_string(removed_user_queryset_callback)
+                queryset = callback(queryset)
+            users = queryset.values_list(username_field, flat=True)
             django_usernames = set(users)
             for username in django_usernames - ldap_usernames:
                 user = model.objects.get(**{username_field: username})
