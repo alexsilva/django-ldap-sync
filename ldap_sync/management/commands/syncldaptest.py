@@ -20,5 +20,12 @@ class Command(BaseCommand):
 
         service = Service(uri)
         service.login(base_user, base_pass)
-        for user in service.search(base, user_filter, user_keys, Service.ObjectTypes.USERS):
+
+        print 'start search...'
+        userlist = service.search(base, user_filter, user_keys, Service.ObjectTypes.USERS)
+
+        print 'list of user'
+        for user in userlist:
             print user
+
+        print 'Total users {0!s}'.format(len(userlist))
