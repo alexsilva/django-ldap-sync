@@ -47,6 +47,8 @@ class Command(BaseCommand):
         """Synchronize users with local user model."""
         model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
+        user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
+                                               default={})
         removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
                                                      default=[])
         username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
@@ -73,6 +75,9 @@ class Command(BaseCommand):
                             value = attribute[0].decode('utf-8')
                         else:
                             value = attribute[0]
+                        # If the value of the attribute does not exist, it uses the default.
+                        if value is None:
+                            value = user_attributes_defaults.get(name)
                         defaults[user_attributes[name]] = value
                     except KeyError:
                         pass
