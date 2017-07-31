@@ -74,7 +74,7 @@ class Command(BaseCommand):
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
         if not user_filter:
             self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
-            return None
+            return []
 
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
         user_keys = set(user_attributes.keys())
