@@ -7,11 +7,15 @@ from django.contrib.auth.models import Group
 from django.db import DataError
 from django.db import IntegrityError
 from django.utils.module_loading import import_string
-from ldap_sync.service import Service
+from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
 
 
 logger = logging.getLogger(__name__)
+
+service_string = get_setting("LDAP_SYNC_SERVICE", default=LdapSearch)
+if isinstance(service_string, (str, unicode)):
+    LdapSearch = import_string(service_string)
 
 
 class Command(BaseCommand):
@@ -38,8 +42,7 @@ class Command(BaseCommand):
         user_extra_attributes = get_setting('LDAP_SYNC_USER_EXTRA_ATTRIBUTES', default=[])
         user_keys.update(user_extra_attributes)
 
-        users = self.ldap_search(user_filter, user_keys,
-                                 Service.ObjectTypes.USERS)
+        users = self.ldap_search("users", user_filter, user_keys)
         logger.debug("Retrieved %d users" % len(users))
         return users
 
@@ -157,8 +160,7 @@ class Command(BaseCommand):
 
         group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES', strict=True)
 
-        groups = self.ldap_search(group_filter, group_attributes.keys(),
-                                  Service.ObjectTypes.GROUPS)
+        groups = self.ldap_search("groups", group_filter, group_attributes.keys())
         logger.debug("Retrieved %d groups" % len(groups))
         return groups
 
@@ -205,22 +207,21 @@ class Command(BaseCommand):
 
         logger.info("Groups are synchronized")
 
-    def ldap_search(self, filter, attributes, objecttype=None):
+    def ldap_search(self, sname, sfilter, attributes):
         """
         Query the configured LDAP server with the provided search filter and
         attribute list.
         """
         uri = get_setting('LDAP_SYNC_URI', strict=True)
-        base_user = get_setting('LDAP_SYNC_BASE_USER', strict=True)
-        base_pass = get_setting('LDAP_SYNC_BASE_PASS', strict=True)
-        base = get_setting('LDAP_SYNC_BASE', strict=True)
+        username = get_setting('LDAP_SYNC_BASE_USER', strict=True)
+        password = get_setting('LDAP_SYNC_BASE_PASS', strict=True)
+        base_dn = get_setting('LDAP_SYNC_BASE', strict=True)
 
         # ldap config
-        service = Service(uri)
+        ldap_search = LdapSearch(uri)
 
         # ldap authentication
-        service.login(base_user, base_pass)
+        ldap_search.login(username, password)
 
         # ldap search
-        results = service.search(base, filter, attributes, objecttype)
-        return results
+        return getattr(ldap_search, sname)(base_dn, sfilter, attributes)
