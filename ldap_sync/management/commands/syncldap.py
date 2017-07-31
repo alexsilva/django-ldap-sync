@@ -194,7 +194,7 @@ class Command(BaseCommand):
         group_filter = get_setting('LDAP_SYNC_GROUP_FILTER')
         if not group_filter:
             self.logger.debug('LDAP_SYNC_GROUP_FILTER not configured, skipping group sync')
-            return None
+            return []
 
         group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES', strict=True)
 
