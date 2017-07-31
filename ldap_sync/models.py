@@ -42,8 +42,8 @@ class LdapSyncLog(models.Model):
 
 class LdapSyncLogMeta(models.Model):
     log = models.ForeignKey(LdapSyncLog)
-    level = models.SmallIntegerField()
-    text = models.TextField()
+    level = models.SmallIntegerField(_("Level"))
+    text = models.TextField(_("Text"))
 
     def __unicode__(self):
         text = Truncator(self.text).chars(30, html=True)
