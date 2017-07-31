@@ -10,6 +10,8 @@ from django.utils.module_loading import import_string
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
 
+# django user model
+User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,6 @@ class Command(BaseCommand):
 
     def sync_ldap_users(self, ldap_users):
         """Synchronize users with local user model."""
-        model = get_user_model()
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
         user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
                                                default={})
@@ -57,12 +58,12 @@ class Command(BaseCommand):
         username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
-            username_field = getattr(model, 'USERNAME_FIELD', 'username')
+            username_field = getattr(User, 'USERNAME_FIELD', 'username')
         user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
         removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
         ldap_usernames = set()
 
-        if not model._meta.get_field(username_field).unique:
+        if not User._meta.get_field(username_field).unique:
             raise ImproperlyConfigured("Field '%s' must be unique" % username_field)
 
         if username_field not in user_attributes.values():
@@ -109,7 +110,7 @@ class Command(BaseCommand):
             }
 
             try:
-                user, created = model.objects.get_or_create(**kwargs)
+                user, created = User.objects.get_or_create(**kwargs)
             except (IntegrityError, DataError) as e:
                 logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
@@ -136,7 +137,7 @@ class Command(BaseCommand):
                     ldap_usernames.add(username)
 
         if removed_user_callbacks:
-            queryset = model.objects.all()
+            queryset = User.objects.all()
             if removed_user_queryset_callbacks:
                 for path in removed_user_queryset_callbacks:
                     callback = import_string(path)
@@ -144,7 +145,7 @@ class Command(BaseCommand):
             users = queryset.values_list(username_field, flat=True)
             django_usernames = set(users)
             for username in django_usernames - ldap_usernames:
-                user = model.objects.get(**{username_field: username})
+                user = User.objects.get(**{username_field: username})
                 for path in removed_user_callbacks:
                     callback = import_string(path)
                     callback(user)
