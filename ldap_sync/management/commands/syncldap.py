@@ -1,4 +1,5 @@
 import logging
+from StringIO import StringIO
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
@@ -9,21 +10,43 @@ from django.db import IntegrityError
 from django.utils.module_loading import import_string
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
+from ldap_sync.logger import Logger
+import traceback
 
 # django user model
 User = get_user_model()
-
-logger = logging.getLogger(__name__)
 
 service_string = get_setting("LDAP_SYNC_SERVICE", default=LdapSearch)
 if isinstance(service_string, (str, unicode)):
     LdapSearch = import_string(service_string)
 
 
+class ContextLogger(object):
+    def __init__(self):
+        self.logger = Logger()
+
+    def __call__(self, method, *args, **kwargs):
+        def wrapper(this, *_args, **_kwargs):
+            this.logger = self.logger
+            try:
+                return method(this, *_args, **_kwargs)
+            except:
+                stream = StringIO()
+                traceback.print_exc(file=stream)
+                self.logger.error(stream)
+                raise
+        return wrapper
+
+
 class Command(BaseCommand):
     can_import_settings = True
     help = 'Synchronize users and groups from an authoritative LDAP server'
 
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
+        self.logger = None
+
+    @ContextLogger()
     def handle(self, *args, **options):
         ldap_groups = self.get_ldap_groups()
         if ldap_groups:
@@ -36,7 +59,7 @@ class Command(BaseCommand):
         """Retrieve user data from LDAP server."""
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
         if not user_filter:
-            logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
+            self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
             return None
 
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
@@ -45,7 +68,7 @@ class Command(BaseCommand):
         user_keys.update(user_extra_attributes)
 
         users = self.ldap_search("users", user_filter, user_keys)
-        logger.debug("Retrieved %d users" % len(users))
+        self.logger.info("Retrieved %d users" % len(users))
         return users
 
     def sync_ldap_users(self, ldap_users):
@@ -54,7 +77,7 @@ class Command(BaseCommand):
         user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
                                                default={})
         removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
-                                                     default=[])
+                                                      default=[])
         username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
         username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
         if username_field is None:
@@ -91,7 +114,7 @@ class Command(BaseCommand):
             try:
                 username = defaults[username_field]
             except KeyError:
-                logger.warning("User is missing a required attribute '%s'" % username_field)
+                self.logger.warning("User is missing a required attribute '%s'" % username_field)
                 continue
 
             old_username = username
@@ -110,11 +133,11 @@ class Command(BaseCommand):
             try:
                 user, created = User.objects.get_or_create(**kwargs)
             except (IntegrityError, DataError) as e:
-                logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
+                self.logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
                 updated = False
                 if created:
-                    logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
+                    self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
                 else:
                     for name, attr in defaults.items():
@@ -123,7 +146,7 @@ class Command(BaseCommand):
                             setattr(user, name, attr)
                             updated = True
                     if updated:
-                        logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
+                        self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
                 for path in user_callbacks:
                     callback = import_string(path)
@@ -147,21 +170,21 @@ class Command(BaseCommand):
                 for path in removed_user_callbacks:
                     callback = import_string(path)
                     callback(user)
-                    logger.debug("Called %s for user %s" % (path, user))
+                    self.logger.debug("Called %s for user %s" % (path, user))
 
-        logger.info("Users are synchronized")
+        self.logger.info("Users are synchronized")
 
     def get_ldap_groups(self):
         """Retrieve groups from LDAP server."""
         group_filter = get_setting('LDAP_SYNC_GROUP_FILTER')
         if not group_filter:
-            logger.debug('LDAP_SYNC_GROUP_FILTER not configured, skipping group sync')
+            self.logger.debug('LDAP_SYNC_GROUP_FILTER not configured, skipping group sync')
             return None
 
         group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES', strict=True)
 
         groups = self.ldap_search("groups", group_filter, group_attributes.keys())
-        logger.debug("Retrieved %d groups" % len(groups))
+        self.logger.debug("Retrieved %d groups" % len(groups))
         return groups
 
     def sync_ldap_groups(self, ldap_groups):
@@ -189,7 +212,7 @@ class Command(BaseCommand):
             try:
                 groupname = defaults[groupname_field]
             except KeyError:
-                logger.warning("Group is missing a required attribute '%s'" % groupname_field)
+                self.logger.warning("Group is missing a required attribute '%s'" % groupname_field)
                 continue
 
             kwargs = {
@@ -200,12 +223,12 @@ class Command(BaseCommand):
             try:
                 group, created = Group.objects.get_or_create(**kwargs)
             except (IntegrityError, DataError) as e:
-                logger.error("Error creating group %s: %s" % (groupname, e))
+                self.logger.error("Error creating group %s: %s" % (groupname, e))
             else:
                 if created:
-                    logger.debug("Created group %s" % groupname)
+                    self.logger.debug("Created group %s" % groupname)
 
-        logger.info("Groups are synchronized")
+        self.logger.info("Groups are synchronized")
 
     def ldap_search(self, sname, sfilter, attributes):
         """
