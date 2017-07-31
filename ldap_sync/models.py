@@ -13,3 +13,16 @@ class LdapObject(models.Model):
 
     def __unicode__(self):
         return "{0.user}".format(self)
+
+
+class LdapSyncLog(models.Model):
+    """Synchronization process logs"""
+
+    created = models.DateTimeField(auto_now_add=True)
+    status = models.BooleanField("Status", default=False)
+
+    # Total of synchronized objects
+    total = models.IntegerField("Total", default=0)
+
+    def __unicode__(self):
+        return u"{0.status}/{0.total}".format(self)
