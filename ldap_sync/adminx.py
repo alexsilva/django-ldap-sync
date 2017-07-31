@@ -24,6 +24,10 @@ class LdapSearchAdmin(object):
     """"""
     inlines = (LdapSearchInline,)
     readonly_fields = ["status", "total"]
+    list_filter = (
+        "created",
+        "status"
+    )
     list_display = (
         "created",
         "total",
