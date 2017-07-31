@@ -46,11 +46,7 @@ class LogResultNum(object):
         def wrapper(this, *_args, **_kwargs):
             logger = this.logger
             method_result = method(this, *_args, **_kwargs)
-            try:
-                logger.set_total(len(method_result))
-            except TypeError:
-                # just ignore
-                pass
+            logger.set_total(len(method_result))
             return method_result
         return wrapper
 
