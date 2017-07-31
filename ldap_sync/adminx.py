@@ -8,6 +8,7 @@ class LdapSearchInline(object):
     model = LdapSyncLogMeta
     exclude = ("level",)
     readonly_fields = ['level_text_show', 'text']
+    can_delete = False
     style = "table"
     extra = 0
 
@@ -22,7 +23,7 @@ class LdapSearchInline(object):
 class LdapSearchAdmin(object):
     """"""
     inlines = (LdapSearchInline,)
-
+    readonly_fields = ["status", "total"]
     list_display = (
         "created",
         "total",
