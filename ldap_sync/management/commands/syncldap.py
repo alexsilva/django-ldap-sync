@@ -29,12 +29,28 @@ class ContextLogger(object):
         def wrapper(this, *_args, **_kwargs):
             this.logger = self.logger
             try:
-                return method(this, *_args, **_kwargs)
+                method_result = method(this, *_args, **_kwargs)
             except:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
                 self.logger.error(stream.getvalue())
                 raise
+            return method_result
+        return wrapper
+
+
+class LogResultNum(object):
+    """"""
+    def __call__(self, method, *args, **kwargs):
+        def wrapper(this, *_args, **_kwargs):
+            logger = this.logger
+            method_result = method(this, *_args, **_kwargs)
+            try:
+                logger.set_total(len(method_result))
+            except TypeError:
+                # just ignore
+                pass
+            return method_result
         return wrapper
 
 
@@ -55,6 +71,7 @@ class Command(BaseCommand):
         ldap_users = self.get_ldap_users()
         self.sync_ldap_users(ldap_users)
 
+    @LogResultNum()
     def get_ldap_users(self):
         """Retrieve user data from LDAP server."""
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
@@ -174,6 +191,7 @@ class Command(BaseCommand):
 
         self.logger.info("Users are synchronized")
 
+    @LogResultNum()
     def get_ldap_groups(self):
         """Retrieve groups from LDAP server."""
         group_filter = get_setting('LDAP_SYNC_GROUP_FILTER')
