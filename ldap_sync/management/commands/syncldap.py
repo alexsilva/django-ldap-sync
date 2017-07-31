@@ -35,6 +35,7 @@ class ContextLogger(object):
                 traceback.print_exc(file=stream)
                 self.logger.error(stream.getvalue())
                 raise
+            self.logger.set_status(True)
             return method_result
         return wrapper
 
