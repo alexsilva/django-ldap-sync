@@ -12,7 +12,7 @@ class LdapObject(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return "{0.user}".format(self)
+        return u"{0.user}".format(self)
 
 
 class LdapSyncLog(models.Model):
