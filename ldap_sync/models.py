@@ -9,7 +9,8 @@ from django.utils.text import Truncator
 class LdapObject(models.Model):
     """Data information for a synchronized ldap object"""
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,
+                                verbose_name=_("User"))
     data = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)

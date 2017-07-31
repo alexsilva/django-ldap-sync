@@ -37,6 +37,9 @@ class LdapSearchAdmin(object):
 
 class LdapObjectAdmin(object):
     """"""
+    list_display = (
+        "user",
+    )
 
 
 site.register(LdapObject, LdapObjectAdmin)
