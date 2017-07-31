@@ -11,6 +11,7 @@ from django.utils.module_loading import import_string
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
 from ldap_sync.logger import Logger
+from ldap_sync.models import LdapObject
 import traceback
 
 # django user model
@@ -85,6 +86,17 @@ class Command(BaseCommand):
         self.logger.info("Retrieved %d users" % len(users))
         return users
 
+    @staticmethod
+    def ldap_user_save(user, user_data):
+        # Saves the data to json of the object.
+        data = user_data['json']
+        try:
+            ldap_object = LdapObject.objects.get(user=user)
+            ldap_object.data = data
+            ldap_object.save()
+        except LdapObject.DoesNotExist:
+            LdapObject.objects.create(user=user, data=data)
+
     def sync_ldap_users(self, ldap_users):
         """Synchronize users with local user model."""
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
@@ -107,8 +119,8 @@ class Command(BaseCommand):
             error_msg = ("LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % username_field)
             raise ImproperlyConfigured(error_msg)
 
-        for user in ldap_users:
-            attributes = user['attributes']
+        for user_data in ldap_users:
+            attributes = user_data['attributes']
             defaults = {}
             try:
                 for name, value in attributes.items():
@@ -149,6 +161,7 @@ class Command(BaseCommand):
             except (IntegrityError, DataError) as e:
                 self.logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
+                self.ldap_user_save(user, user_data)
                 updated = False
                 if created:
                     self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
