@@ -23,5 +23,10 @@ class LdapSearchAdmin(object):
     """"""
     inlines = (LdapSearchInline,)
 
+    list_display = (
+        "created",
+        "total",
+        "status"
+    )
 
 site.register(LdapSyncLog, LdapSearchAdmin)
