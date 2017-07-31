@@ -13,6 +13,14 @@ class Logger(object):
             level=level,
             text=msg)
 
+    def set_total(self, value):
+        self.slog.total = value
+        self.slog.save()
+
+    def set_status(self, value):
+        self.slog.status = value
+        self.slog.save()
+
     def info(self, msg):
         self.log(msg)
 
