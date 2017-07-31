@@ -1,7 +1,7 @@
 import logging
 from django.utils.translation import ugettext_lazy as _
 from xadmin import site
-from .models import LdapSyncLog, LdapSyncLogMeta
+from .models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 
 
 class LdapSearchInline(object):
@@ -30,4 +30,10 @@ class LdapSearchAdmin(object):
         "status"
     )
 
+
+class LdapObjectAdmin(object):
+    """"""
+
+
+site.register(LdapObject, LdapObjectAdmin)
 site.register(LdapSyncLog, LdapSearchAdmin)

@@ -18,6 +18,10 @@ class LdapObject(models.Model):
     def __unicode__(self):
         return u"{0.user}".format(self)
 
+    class Meta:
+        verbose_name = _("Object")
+        verbose_name_plural = _("Objects")
+
 
 class LdapSyncLog(models.Model):
     """Synchronization process logs"""
