@@ -7,7 +7,7 @@ from .models import LdapSyncLog, LdapSyncLogMeta
 class LdapSearchInline(object):
     model = LdapSyncLogMeta
     exclude = ("level",)
-    readonly_fields = ['text', 'level_text_show']
+    readonly_fields = ['level_text_show', 'text']
     style = "table"
     extra = 0
 
