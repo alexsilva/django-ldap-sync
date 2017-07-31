@@ -74,14 +74,12 @@ class Command(BaseCommand):
             attributes = user['attributes']
             defaults = {}
             try:
-                for name, attribute in attributes.items():
+                for name, value in attributes.items():
                     try:
-                        if isinstance(attribute[0], str):
-                            value = attribute[0].decode('utf-8')
-                        else:
-                            value = attribute[0]
+                        if isinstance(value, str):
+                            value = value.decode('utf-8')
                         # If the value of the attribute does not exist, it uses the default.
-                        if value is None:
+                        if not value:
                             value = user_attributes_defaults.get(name)
                         defaults[user_attributes[name]] = value
                     except KeyError:
