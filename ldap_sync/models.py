@@ -10,7 +10,7 @@ class LdapObject(models.Model):
     """Data information for a synchronized ldap object"""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    data = models.TextField()
+    data = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
