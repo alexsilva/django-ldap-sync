@@ -1,5 +1,8 @@
 from django.db import models
 from django.conf import settings
+import logging
+
+from django.utils.text import Truncator
 
 
 class LdapObject(models.Model):
@@ -26,3 +29,13 @@ class LdapSyncLog(models.Model):
 
     def __unicode__(self):
         return u"{0.status}/{0.total}".format(self)
+
+
+class LdapSyncLogMeta(models.Model):
+    log = models.ForeignKey(LdapSyncLog)
+    level = models.SmallIntegerField()
+    text = models.TextField()
+
+    def __unicode__(self):
+        text = Truncator(self.text).chars(30, html=True)
+        return u"{} {}".format(logging.getLevelName(self.level), text)
