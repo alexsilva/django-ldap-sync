@@ -33,7 +33,7 @@ class ContextLogger(object):
             except:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
-                self.logger.error(stream)
+                self.logger.error(stream.getvalue())
                 raise
         return wrapper
 
