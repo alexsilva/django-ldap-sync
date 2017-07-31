@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 import logging
 
 from django.utils.text import Truncator
@@ -30,6 +31,10 @@ class LdapSyncLog(models.Model):
     def __unicode__(self):
         return u"{0.status}/{0.total}".format(self)
 
+    class Meta:
+        verbose_name = _("Log")
+        verbose_name_plural = _("Log")
+
 
 class LdapSyncLogMeta(models.Model):
     log = models.ForeignKey(LdapSyncLog)
@@ -38,4 +43,8 @@ class LdapSyncLogMeta(models.Model):
 
     def __unicode__(self):
         text = Truncator(self.text).chars(30, html=True)
-        return u"{} {}".format(logging.getLevelName(self.level), text)
+        return u"[{}] {}".format(logging.getLevelName(self.level), text)
+
+    class Meta:
+        verbose_name = _("Log Info")
+        verbose_name_plural = _("Log Infos")
