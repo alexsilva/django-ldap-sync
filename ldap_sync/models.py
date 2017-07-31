@@ -8,8 +8,8 @@ class LdapObject(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     data = models.TextField()
 
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
         return u"{0.user}".format(self)
