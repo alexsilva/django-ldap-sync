@@ -87,15 +87,12 @@ class Command(BaseCommand):
         return users
 
     @staticmethod
-    def ldap_user_save(user, user_data):
-        # Saves the data to json of the object.
-        data = user_data['json']
-        try:
-            ldap_object = LdapObject.objects.get(user=user)
-            ldap_object.data = data
-            ldap_object.save()
-        except LdapObject.DoesNotExist:
-            LdapObject.objects.create(user=user, data=data)
+    def ldap_user_save(user, old_username, user_data):
+        # Saves the data in json of the object.
+        ldap_object, created = LdapObject.objects.get_or_create(user=user)
+        ldap_object.account_name = old_username
+        ldap_object.data = user_data['json']
+        ldap_object.save()
 
     def sync_ldap_users(self, ldap_users):
         """Synchronize users with local user model."""
@@ -161,7 +158,7 @@ class Command(BaseCommand):
             except (IntegrityError, DataError) as e:
                 self.logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
-                self.ldap_user_save(user, user_data)
+                self.ldap_user_save(user, old_username, user_data)
                 updated = False
                 if created:
                     self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
