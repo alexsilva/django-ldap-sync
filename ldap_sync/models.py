@@ -11,6 +11,8 @@ class LdapObject(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 verbose_name=_("User"))
+    account_name = models.CharField(_("Account name"),
+                                    max_length=256)
     data = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
