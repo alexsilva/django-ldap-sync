@@ -24,19 +24,19 @@ if isinstance(service_string, (str, unicode)):
 
 class ContextLogger(object):
     def __init__(self):
-        self.logger = Logger()
+        self.logger = None
 
     def __call__(self, method, *args, **kwargs):
         def wrapper(this, *_args, **_kwargs):
-            this.logger = self.logger
+            this.logger = this.logger
             try:
                 method_result = method(this, *_args, **_kwargs)
             except:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
-                self.logger.error(stream.getvalue())
+                this.logger.error(stream.getvalue())
                 raise
-            self.logger.set_status(True)
+            this.logger.set_status(True)
             return method_result
         return wrapper
 
@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
-        self.logger = None
+        self.logger = Logger()
 
     @ContextLogger()
     def handle(self, *args, **options):
