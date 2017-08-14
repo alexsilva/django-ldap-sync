@@ -23,12 +23,8 @@ if isinstance(service_string, (str, unicode)):
 
 
 class ContextLogger(object):
-    def __init__(self):
-        self.logger = None
-
     def __call__(self, method, *args, **kwargs):
         def wrapper(this, *_args, **_kwargs):
-            this.logger = this.logger
             try:
                 method_result = method(this, *_args, **_kwargs)
             except:
