@@ -17,6 +17,10 @@ class Logger(object):
         self.slog.total = value
         self.slog.save()
 
+    def set_synchronizing(self, value):
+        self.slog.synchronizing = value
+        self.slog.save()
+
     def set_status(self, value):
         self.slog.status = value
         self.slog.save()

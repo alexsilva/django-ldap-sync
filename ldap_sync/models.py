@@ -31,6 +31,7 @@ class LdapSyncLog(models.Model):
 
     created = models.DateTimeField(_("Sync date"), auto_now_add=True)
     status = models.BooleanField(_("Status"), default=False)
+    synchronizing = models.BooleanField(_("Synchronizing"), default=False)
 
     # Total of synchronized objects
     total = models.IntegerField(_("Total"), default=0)

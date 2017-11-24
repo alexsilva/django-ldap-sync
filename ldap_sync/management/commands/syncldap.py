@@ -37,17 +37,6 @@ class ContextLogger(object):
         return wrapper
 
 
-class LogResultNum(object):
-    """"""
-    def __call__(self, method, *args, **kwargs):
-        def wrapper(this, *_args, **_kwargs):
-            logger = this.logger
-            method_result = method(this, *_args, **_kwargs)
-            logger.set_total(len(method_result))
-            return method_result
-        return wrapper
-
-
 class Command(BaseCommand):
     can_import_settings = True
     help = 'Synchronize users and groups from an authoritative LDAP server'
@@ -62,25 +51,34 @@ class Command(BaseCommand):
         if ldap_groups:
             self.sync_ldap_groups(ldap_groups)
 
-        ldap_users = self.get_ldap_users()
-        self.sync_ldap_users(ldap_users)
+        # the results come paginated.
+        user_counter = 0
+        self.logger.set_synchronizing(True)
+        try:
+            for ldap_users in self.get_ldap_users():
+                total = len(ldap_users)
+                user_counter += total
+                self.logger.set_total(user_counter)
+                self.logger.info("Retrieved %d users" % total)
+                self.sync_ldap_users(ldap_users)
+        finally:
+            self.logger.set_synchronizing(False)
+        self.logger.info("Users are synchronized")
 
-    @LogResultNum()
     def get_ldap_users(self):
         """Retrieve user data from LDAP server."""
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
         if not user_filter:
             self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
-            return []
+            yield []
 
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
         user_keys = set(user_attributes.keys())
         user_extra_attributes = get_setting('LDAP_SYNC_USER_EXTRA_ATTRIBUTES', default=[])
         user_keys.update(user_extra_attributes)
 
-        users = self.ldap_search("users", user_filter, user_keys)
-        self.logger.info("Retrieved %d users" % len(users))
-        return users
+        for ldap_users in self.ldap_search("users", user_filter, user_keys):
+            yield ldap_users
 
     @staticmethod
     def ldap_user_save(user, old_username, user_data):
@@ -192,9 +190,6 @@ class Command(BaseCommand):
                     callback(user)
                     self.logger.debug("Called %s for user %s" % (path, user))
 
-        self.logger.info("Users are synchronized")
-
-    @LogResultNum()
     def get_ldap_groups(self):
         """Retrieve groups from LDAP server."""
         group_filter = get_setting('LDAP_SYNC_GROUP_FILTER')
