@@ -23,7 +23,7 @@ class LdapSearchInline(object):
 class LdapSearchAdmin(object):
     """"""
     inlines = (LdapSearchInline,)
-    readonly_fields = ["status", "total"]
+    readonly_fields = ["synchronizing", "total", "status"]
     list_filter = (
         "synchronizing",
         "created",
