@@ -1,18 +1,18 @@
-import logging
+import traceback
 from StringIO import StringIO
 
-from django.core.exceptions import ImproperlyConfigured
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ImproperlyConfigured
+from django.core.management.base import BaseCommand
 from django.db import DataError
 from django.db import IntegrityError
 from django.utils.module_loading import import_string
-from ldap_sync.service import LdapSearch
-from ldap_sync.utils import get_setting
+
 from ldap_sync.logger import Logger
 from ldap_sync.models import LdapObject
-import traceback
+from ldap_sync.service import LdapSearch
+from ldap_sync.utils import get_setting
 
 # django user model
 User = get_user_model()
@@ -37,6 +37,164 @@ class ContextLogger(object):
         return wrapper
 
 
+class UserSync(object):
+    """
+    Intermediate layer of synchronization
+    """
+    user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
+    user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
+                                           default={})
+    removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
+                                                  default=[])
+    username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
+    username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
+    if username_field is None:
+        username_field = getattr(User, 'USERNAME_FIELD', 'username')
+    user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
+    removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
+
+    def __init__(self, command):
+        """
+        Initializing method
+        :param command: Django command
+        """
+        self.command = command
+        self.username_is_unique = User._meta.get_field(self.username_field).unique
+        self.pks = set()
+        self.counter = 0
+
+    def __getattr__(self, item):
+        return getattr(self.command, item)
+
+    def before(self):
+        """Operations before running synchronization"""
+        self.logger.set_synchronizing(True)
+
+    @staticmethod
+    def _ldapobject_save(user, old_username, user_data):
+        # Saves the data in json of the object.
+        ldap_object, created = LdapObject.objects.get_or_create(user=user)
+        ldap_object.account_name = old_username
+        ldap_object.data = user_data['json']
+        ldap_object.save()
+
+    def execute(self, ldap_users):
+        """ Synchronize a set of users """
+        if not self.username_is_unique:
+            raise ImproperlyConfigured(u"Field '%s' must be unique" % self.username_field)
+
+        if self.username_field not in self.user_attributes.values():
+            error_msg = (u"LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
+            raise ImproperlyConfigured(error_msg)
+
+        total = len(ldap_users)
+        self.counter += total
+
+        self.logger.info(u"Retrieved %d users" % total)
+        self.logger.set_total(self.counter)
+
+        for user_data in ldap_users:
+            attributes = user_data['attributes']
+            defaults = {}
+            try:
+                for name, value in attributes.items():
+                    try:
+                        if isinstance(value, str):
+                            value = value.decode('utf-8')
+                        # If the value of the attribute does not exist, it uses the default.
+                        if not value:
+                            value = self.user_attributes_defaults.get(name)
+                        defaults[self.user_attributes[name]] = value
+                    except KeyError:
+                        pass
+            except AttributeError:
+                # In some cases attributes is a list instead of a dict; skip these invalid users
+                continue
+
+            try:
+                username = defaults[self.username_field]
+            except KeyError:
+                self.logger.warning(u"User is missing a required attribute '%s'" % self.username_field)
+                continue
+
+            old_username = username
+
+            # username changes
+            for path in self.username_callbacks:
+                callback = import_string(path)
+                username = callback(username)
+                defaults[self.username_field] = username
+
+            kwargs = {
+                self.username_field + '__exact': username,
+                'defaults': defaults,
+            }
+
+            try:
+                user, created = User.objects.get_or_create(**kwargs)
+            except (IntegrityError, DataError) as e:
+                self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
+            else:
+                self._ldapobject_save(user, old_username, user_data)
+                updated = False
+                if created:
+                    self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
+                    user.set_unusable_password()
+                else:
+                    for name, attr in defaults.items():
+                        current_attr = getattr(user, name, None)
+                        if current_attr != attr:
+                            setattr(user, name, attr)
+                            updated = True
+                    if updated:
+                        self.logger.debug(u"Updated user {0!s}/{1!s}".format(username, old_username))
+
+                for path in self.user_callbacks:
+                    callback = import_string(path)
+                    callback(user, attributes, created, updated)
+
+                user.save()
+
+                if self.removed_user_callbacks:
+                    self.pks.add(user.pk)
+
+    def after(self):
+        """Operations after performing synchronization"""
+        try:
+            self.check_removed()
+        finally:
+            self.logger.set_synchronizing(False)
+            self.logger.info(u"Users are synchronized")
+
+    def __enter__(self):
+        self.before()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None and exc_val is None and exc_tb is None:
+            self.after()
+
+    def check_removed(self):
+        """Makes user removal not found on ldap db"""
+        if self.removed_user_callbacks:
+            queryset = User.objects.all()
+
+            if self.removed_user_queryset_callbacks:
+                for path in self.removed_user_queryset_callbacks:
+                    callback = import_string(path)
+                    queryset = callback(queryset)
+
+            # Consider only current user set, because of pagination
+            django_pks = set(queryset.values_list("pk", flat=True))
+
+            for user_pk in django_pks - self.pks:
+                user = User.objects.get(pk=user_pk)
+                for path in self.removed_user_callbacks:
+                    callback = import_string(path)
+                    callback(user)
+                    self.logger.debug(u"Called %s for user %s" % (path, user))
+
+
 class Command(BaseCommand):
     can_import_settings = True
     help = 'Synchronize users and groups from an authoritative LDAP server'
@@ -49,146 +207,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         ldap_groups = self.get_ldap_groups()
         if ldap_groups:
-            self.sync_ldap_groups(ldap_groups)
+            self.search_groups(ldap_groups)
 
-        # the results come paginated.
-        user_counter = 0
-        self.logger.set_synchronizing(True)
-        try:
-            for ldap_users in self.get_ldap_users():
-                total = len(ldap_users)
-                user_counter += total
-                self.logger.set_total(user_counter)
-                self.logger.info("Retrieved %d users" % total)
-                self.sync_ldap_users(ldap_users)
-        finally:
-            self.logger.set_synchronizing(False)
-        self.logger.info("Users are synchronized")
+        with UserSync(self) as usync:
+            for users in self.search_users():
+                usync.execute(users)
 
-    def get_ldap_users(self):
+    def search_users(self):
         """Retrieve user data from LDAP server."""
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
         if not user_filter:
-            self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
-            yield []
+            self.logger.debug(u'LDAP_SYNC_USER_FILTER not configured, skipping user sync')
+            return []
 
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
         user_keys = set(user_attributes.keys())
         user_extra_attributes = get_setting('LDAP_SYNC_USER_EXTRA_ATTRIBUTES', default=[])
         user_keys.update(user_extra_attributes)
 
-        for ldap_users in self.ldap_search("users", user_filter, user_keys):
-            yield ldap_users
-
-    @staticmethod
-    def ldap_user_save(user, old_username, user_data):
-        # Saves the data in json of the object.
-        ldap_object, created = LdapObject.objects.get_or_create(user=user)
-        ldap_object.account_name = old_username
-        ldap_object.data = user_data['json']
-        ldap_object.save()
-
-    def sync_ldap_users(self, ldap_users):
-        """Synchronize users with local user model."""
-        user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
-        user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
-                                               default={})
-        removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
-                                                      default=[])
-        username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
-        username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
-        if username_field is None:
-            username_field = getattr(User, 'USERNAME_FIELD', 'username')
-        user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
-        removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
-        ldap_usernames = set()
-
-        if not User._meta.get_field(username_field).unique:
-            raise ImproperlyConfigured("Field '%s' must be unique" % username_field)
-
-        if username_field not in user_attributes.values():
-            error_msg = ("LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % username_field)
-            raise ImproperlyConfigured(error_msg)
-
-        for user_data in ldap_users:
-            attributes = user_data['attributes']
-            defaults = {}
-            try:
-                for name, value in attributes.items():
-                    try:
-                        if isinstance(value, str):
-                            value = value.decode('utf-8')
-                        # If the value of the attribute does not exist, it uses the default.
-                        if not value:
-                            value = user_attributes_defaults.get(name)
-                        defaults[user_attributes[name]] = value
-                    except KeyError:
-                        pass
-            except AttributeError:
-                # In some cases attributes is a list instead of a dict; skip these invalid users
-                continue
-
-            try:
-                username = defaults[username_field]
-            except KeyError:
-                self.logger.warning("User is missing a required attribute '%s'" % username_field)
-                continue
-
-            old_username = username
-
-            # username changes
-            for path in username_callbacks:
-                callback = import_string(path)
-                username = callback(username)
-                defaults[username_field] = username
-
-            kwargs = {
-                username_field + '__exact': username,
-                'defaults': defaults,
-            }
-
-            try:
-                user, created = User.objects.get_or_create(**kwargs)
-            except (IntegrityError, DataError) as e:
-                self.logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
-            else:
-                self.ldap_user_save(user, old_username, user_data)
-                updated = False
-                if created:
-                    self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
-                    user.set_unusable_password()
-                else:
-                    for name, attr in defaults.items():
-                        current_attr = getattr(user, name, None)
-                        if current_attr != attr:
-                            setattr(user, name, attr)
-                            updated = True
-                    if updated:
-                        self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
-
-                for path in user_callbacks:
-                    callback = import_string(path)
-                    callback(user, attributes, created, updated)
-
-                user.save()
-
-                if removed_user_callbacks:
-                    ldap_usernames.add(username)
-
-        if removed_user_callbacks:
-            queryset = User.objects.all()
-            if removed_user_queryset_callbacks:
-                for path in removed_user_queryset_callbacks:
-                    callback = import_string(path)
-                    queryset = callback(queryset)
-            users = queryset.values_list(username_field, flat=True)
-            django_usernames = set(users)
-            for username in django_usernames - ldap_usernames:
-                user = User.objects.get(**{username_field: username})
-                for path in removed_user_callbacks:
-                    callback = import_string(path)
-                    callback(user)
-                    self.logger.debug("Called %s for user %s" % (path, user))
+        return self.ldap_search("users", user_filter, user_keys)
 
     def get_ldap_groups(self):
         """Retrieve groups from LDAP server."""
@@ -203,7 +240,7 @@ class Command(BaseCommand):
         self.logger.debug("Retrieved %d groups" % len(groups))
         return groups
 
-    def sync_ldap_groups(self, ldap_groups):
+    def search_groups(self, ldap_groups):
         """Synchronize LDAP groups with local group model."""
         group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES')
         groupname_field = 'name'
