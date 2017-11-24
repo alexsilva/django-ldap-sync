@@ -46,6 +46,8 @@ class UserSync(object):
                                           default='utf-8')
     user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
                                            default={})
+    user_default_callback = get_setting('LDAP_SYNC_USER_DEFAULT_CALLBACK',
+                                        default=None)
     removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
                                                   default=[])
     username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
@@ -131,6 +133,9 @@ class UserSync(object):
                 self.username_field + '__exact': username,
                 'defaults': defaults,
             }
+            if isinstance(self.user_default_callback, (str, unicode)):
+                callback = import_string(self.user_default_callback)
+                kwargs['defaults'] = callback(**kwargs['defaults'])
 
             try:
                 user, created = User.objects.get_or_create(**kwargs)
