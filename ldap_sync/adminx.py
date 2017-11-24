@@ -22,6 +22,8 @@ class LdapSearchInline(object):
 
 class LdapSearchAdmin(object):
     """"""
+    refresh_times = range(15, 61, 15)
+
     inlines = (LdapSearchInline,)
     readonly_fields = ["synchronizing", "total", "status"]
     list_filter = (
