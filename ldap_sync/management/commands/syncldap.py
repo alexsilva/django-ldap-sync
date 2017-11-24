@@ -141,10 +141,15 @@ class UserSync(object):
                     self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
                 else:
-                    for name, attr in defaults.items():
-                        current_attr = getattr(user, name, None)
-                        if current_attr != attr:
-                            setattr(user, name, attr)
+                    for name, ldap_value in defaults.items():
+                        try:
+                            user_value = getattr(user, name)
+                        except AttributeError:
+                            # This should not happen because it would indicate that the user models are different.
+                            self.logger.debug(u"User {0!s} does not have attribute {1!s}".format(user, name))
+                            continue
+                        if user_value != ldap_value:
+                            setattr(user, name, ldap_value)
                             updated = True
                     if updated:
                         self.logger.debug(u"Updated user {0!s}/{1!s}".format(username, old_username))
