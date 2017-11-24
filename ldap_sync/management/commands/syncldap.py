@@ -42,6 +42,8 @@ class UserSync(object):
     Intermediate layer of synchronization
     """
     user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
+    user_attrvalue_encoding = get_setting('LDAP_SYNC_USER_ATTRVALUE_ENCODING',
+                                          default='utf-8')
     user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
                                            default={})
     removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
@@ -98,9 +100,9 @@ class UserSync(object):
             defaults = {}
             try:
                 for name, value in attributes.items():
+                    if isinstance(value, str):
+                        value = unicode(value, self.user_attrvalue_encoding)
                     try:
-                        if isinstance(value, str):
-                            value = value.decode('utf-8')
                         # If the value of the attribute does not exist, it uses the default.
                         if not value:
                             value = self.user_attributes_defaults.get(name)
