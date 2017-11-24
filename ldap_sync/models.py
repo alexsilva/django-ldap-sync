@@ -22,8 +22,8 @@ class LdapObject(models.Model):
         return u"{0.user}".format(self)
 
     class Meta:
-        verbose_name = _("Object")
-        verbose_name_plural = _("Objects")
+        verbose_name = _("Ldap User")
+        verbose_name_plural = _("Ldap Users")
 
 
 class LdapSyncLog(models.Model):
