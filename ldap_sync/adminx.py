@@ -41,6 +41,11 @@ class LdapSearchAdmin(object):
 
 class LdapObjectAdmin(object):
     """"""
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+    )
     list_display = (
         "user",
         "account_name"
