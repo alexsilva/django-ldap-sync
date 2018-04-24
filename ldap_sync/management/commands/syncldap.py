@@ -185,6 +185,8 @@ class UserSync(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None and exc_val is None and exc_tb is None:
             self.after()
+        else:
+            self.logger.set_synchronizing(False)
 
     def check_removed(self):
         """Makes user removal not found on ldap db"""
