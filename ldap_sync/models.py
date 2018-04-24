@@ -13,7 +13,7 @@ class LdapObject(models.Model):
                                 verbose_name=_("User"))
     account_name = models.CharField(_("Account name"),
                                     max_length=256)
-    data = models.TextField(blank=True, null=True)
+    data = models.TextField(_("Data"), blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -41,7 +41,7 @@ class LdapSyncLog(models.Model):
 
     class Meta:
         verbose_name = _("Log")
-        verbose_name_plural = _("Log")
+        verbose_name_plural = _("Logs")
 
 
 class LdapSyncLogMeta(models.Model):
