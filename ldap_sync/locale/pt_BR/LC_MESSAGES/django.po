@@ -48,7 +48,7 @@ msgstr "Usuários ldap"
 
 #: .\ldap_sync\models.py:32
 msgid "Sync date"
-msgstr "Usuário ldap"
+msgstr "Data da sincronização"
 
 #: .\ldap_sync\models.py:33
 msgid "Status"
