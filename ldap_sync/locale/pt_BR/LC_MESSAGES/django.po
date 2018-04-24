@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-04-24 14:46-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: .\ldap_sync\adminx.py:18 .\ldap_sync\models.py:49
+msgid "Level"
+msgstr "Nível"
+
+#: .\ldap_sync\apps.py:7
+msgid "Ldap sync"
+msgstr "Sincronização do Ldap"
+
+#: .\ldap_sync\models.py:13
+msgid "User"
+msgstr "Usuário"
+
+#: .\ldap_sync\models.py:14
+msgid "Account name"
+msgstr "Nome da conta"
+
+#: .\ldap_sync\models.py:16
+msgid "Data"
+msgstr "Dados"
+
+#: .\ldap_sync\models.py:25
+msgid "Ldap User"
+msgstr "Usuário ldap"
+
+#: .\ldap_sync\models.py:26
+msgid "Ldap Users"
+msgstr "Usuários ldap"
+
+#: .\ldap_sync\models.py:32
+msgid "Sync date"
+msgstr "Usuário ldap"
+
+#: .\ldap_sync\models.py:33
+msgid "Status"
+msgstr "Estado"
+
+#: .\ldap_sync\models.py:34
+msgid "Synchronizing"
+msgstr "Sincronizando"
+
+#: .\ldap_sync\models.py:37
+msgid "Total"
+msgstr "Total"
+
+#: .\ldap_sync\models.py:43
+msgid "Log"
+msgstr "Registro"
+
+#: .\ldap_sync\models.py:44
+msgid "Logs"
+msgstr "Registros"
+
+#: .\ldap_sync\models.py:50
+msgid "Text"
+msgstr "Texto"
+
+#: .\ldap_sync\models.py:57
+msgid "Log Info"
+msgstr "Informação de registro"
+
+#: .\ldap_sync\models.py:58
+msgid "Log Infos"
+msgstr "Informações de registro"
