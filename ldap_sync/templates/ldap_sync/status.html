@@ -5,13 +5,53 @@
     <meta charset="UTF-8">
     <title>{% block title %}LDAP Sync status{% endblock %}</title>
     {% block extrahead %}
+        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/status_styles.css' %}" >
         <script type="application/javascript" src="{% static 'ldap_sync/js/jquery-2.2.4.min.js' %}"></script>
     {% endblock %}
 </head>
 {% block body %}
     <body>
+    <table class="table ldap-sync">
+        <tr>
+            <th>ID</th>
+            <th>Progress</th>
+            <th>Ready</th>
+            <th>Failed</th>
+            <th>Result</th>
+        </tr>
+
+        <tr id="ldap-sync">
+            <td class="task-id"></td>
+            <td class="task-progress"></td>
+            <td class="task-status"></td>
+            <td class="task-failed"></td>
+            <td class="task-result"></td>
+        </tr>
+    </table>
+
     <script type="application/javascript">
         var ldap_sync = {
+            counter: 0,
+            repeat: function(s, n){
+                var a = [];
+                while(a.length < n){
+                    a.push(s);
+                }
+                return a.join('');
+            },
+            update_progress : function(options) {
+                var table = options.table != null ? options.table : $("#ldap-sync");
+                var progress = table.find('.task-progress');
+                progress.text(this.repeat("#", options.counter != null ?
+                                               options.counter : this.counter));
+                if (options.counter != null) {
+                    this.counter = options.counter;
+                    progress.text("");
+                } else {
+                    this.counter += 1;
+                    if (this.counter > 10) {this.counter = 0}
+                }
+            },
             ajax: function () {
                 var $this = this;
                 $.ajax({
@@ -19,12 +59,19 @@
                 }).done(function (data) {
                     var task = data.task;
 
-                    console.log(task);
+                    var $tableTr = $("#ldap-sync");
+                    $tableTr.find('.task-id').text(task.id);
+                    $tableTr.find('.task-status').text(task.ready);
+                    $tableTr.find('.task-failed').text(task.failed);
+                    $tableTr.find('.task-result').text(task.failed ? task.traceback : task.ouput);
 
                     if (!task.ready) {
                         setTimeout(function () {
+                            $this.update_progress.bind($this, {table: $tableTr})();
                             $this.ajax()
                         }, 500)
+                    } else {
+                        $this.update_progress.bind($this, {counter: 0, table: $tableTr})();
                     }
                 })
             }
