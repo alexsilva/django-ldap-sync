@@ -1,0 +1,36 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}LDAP Sync status{% endblock %}</title>
+    {% block extrahead %}
+        <script type="application/javascript" src="{% static 'ldap_sync/js/jquery-2.2.4.min.js' %}"></script>
+    {% endblock %}
+</head>
+{% block body %}
+    <body>
+    <script type="application/javascript">
+        var ldap_sync = {
+            ajax: function () {
+                var $this = this;
+                $.ajax({
+                    url: "{% url 'ldap-sync:status' task_id=async_result.id %}"
+                }).done(function (data) {
+                    var task = data.task;
+
+                    console.log(task);
+
+                    if (!task.ready) {
+                        setTimeout(function () {
+                            $this.ajax()
+                        }, 500)
+                    }
+                })
+            }
+        };
+        ldap_sync.ajax();
+    </script>
+    </body>
+{% endblock %}
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}LDAP Sync{% endblock %}</title>
+    {% block extrahead %}{% endblock %}
+</head>
+<body>
+<form action="" method="post">{% csrf_token %}
+    <button type="submit">Sync</button>
+</form>
+</body>
+</html>
