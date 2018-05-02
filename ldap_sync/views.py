@@ -10,7 +10,7 @@ from celery import current_app
 
 
 class SyncView(View):
-    """S"""
+    """Execution of tasks"""
 
     template = getattr(settings, "LDAP_SYNC_VIEW_INDEX_TEMPLATE",
                        'ldap_sync/index.html')
@@ -38,7 +38,7 @@ class SyncView(View):
 
 
 class SyncStatusView(View):
-
+    """Checking the status of a previously executed task"""
     def get(self, request, **kwargs):
         """Reports task status"""
         task_id = str(kwargs.get("task_id"))
