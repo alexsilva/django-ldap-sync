@@ -42,7 +42,7 @@
             update_progress : function(options) {
                 var table = options.table != null ? options.table : $("#ldap-sync");
                 var progress = table.find('.task-progress');
-                progress.text(this.repeat("#", options.counter != null ?
+                progress.text(this.repeat("|", options.counter != null ?
                                                options.counter : this.counter));
                 if (options.counter != null) {
                     this.counter = options.counter;
