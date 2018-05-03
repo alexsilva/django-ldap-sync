@@ -14,7 +14,11 @@
 
 {% block body %}
 <body>
-{% include "ldap_sync/includes/form_status.html" %}
+    <div class="panel panel-default">
+        <div class="panel-body">
+            {% include "ldap_sync/includes/form_status.html" %}
+        </div>
+    </div>
 </body>
 <script type="application/javascript" src="{% static 'ldap_sync/js/bootstrap.min.js' %}"></script>
 {% endblock %}
