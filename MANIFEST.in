@@ -1,5 +1,7 @@
 include LICENSE
 include README.rst
 recursive-include ldap_sync/locale *
+recursive-include ldap_sync/static *
+recursive-include ldap_sync/templates *
 recursive-include docs *
 prune docs/_build
