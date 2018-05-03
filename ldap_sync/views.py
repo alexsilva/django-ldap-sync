@@ -5,8 +5,10 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import View
-
+from django.contrib.auth import get_user_model
 from celery import current_app
+
+User = get_user_model()
 
 
 class SyncView(View):
@@ -54,5 +56,8 @@ class SyncStatusView(View):
             data['task']['traceback'] = async_result.traceback
         else:
             data['task']['failed'] = False
-            data['task']['output'] = async_result.result
+            data['task']['output'] = {
+                'user_count': User.objects.all().count(),
+                'label': "User count"
+            }
         return JsonResponse(data)

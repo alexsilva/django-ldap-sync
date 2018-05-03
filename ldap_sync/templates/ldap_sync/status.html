@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <title>{% block title %}LDAP Sync status{% endblock %}</title>
     {% block extrahead %}
-        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap.min.css' %}" >
-        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap-theme.css' %}" >
+        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap-theme.css' %}">
         <script type="application/javascript" src="{% static 'ldap_sync/js/jquery-2.2.4.min.js' %}"></script>
     {% endblock %}
 </head>
@@ -15,45 +15,60 @@
     {% include "ldap_sync/includes/form_status.html" %}
     <table class="table table-condensed table-striped ldap-sync">
         <thead>
-            <tr>
-                <th scope="col">Progress</th>
-                <th scope="col">Ready</th>
-                <th scope="col">Failed</th>
-                <th scope="col">Result</th>
-            </tr>
+        <tr>
+            <th scope="col">Progress</th>
+            <th scope="col">Ready</th>
+            <th scope="col">Failed</th>
+            <th scope="col">Result</th>
+        </tr>
         </thead>
         <tbody>
-            <tr id="ldap-sync" >
-                <td class="task-progress"></td>
-                <td class="task-status"></td>
-                <td class="task-failed"></td>
-                <td class="task-result"></td>
-            </tr>
+        <tr id="ldap-sync">
+            <td class="task-progress"></td>
+            <td class="task-status"></td>
+            <td class="task-failed"></td>
+            <td class="task-result"></td>
+        </tr>
         </tbody>
     </table>
 
     <script type="application/javascript">
         var ldap_sync = {
             counter: 0,
-            repeat: function(s, n){
+            init: function () {
+                this.form = $("form#ldap-sync-form");
+                this.button = this.form.find("button[type=submit]");
+                if (this.button != null) this.button.prop('disabled', true);
+            },
+            repeat: function (s, n) {
                 var a = [];
-                while(a.length < n){
-                    a.push(s);
-                }
+                while (a.length < n) { a.push(s); }
                 return a.join('');
             },
-            update_progress : function(options) {
-                var table = options.table != null ? options.table : $("#ldap-sync");
+            update_progress: function (table) {
                 var progress = table.find('.task-progress');
-                progress.text(this.repeat("|", options.counter != null ?
-                                               options.counter : this.counter));
-                if (options.counter != null) {
-                    this.counter = options.counter;
-                    progress.text("");
+                progress.text(this.repeat("|", this.counter));
+                this.counter += 1;
+                if (this.counter > 20) {this.counter = 0}
+            },
+            stop_progress : function(table) {
+                table.find('.task-progress').text("");
+                this.counter = 0;
+                if (this.button != null)
+                    this.button.prop('disabled', false)
+            },
+            update_status : function(options) {
+                var $tableTr = $("#ldap-sync");
+                $tableTr.find('.task-status').text(options.ready);
+                $tableTr.find('.task-failed').text(options.failed);
+                var result = $tableTr.find('.task-result');
+                if (options.failed) {
+                    result.text(options.traceback);
                 } else {
-                    this.counter += 1;
-                    if (this.counter > 20) {this.counter = 0}
+                    result.text(options.output.label + ": " + options.output.user_count);
                 }
+                this.update_progress($tableTr);
+                return $tableTr;
             },
             ajax: function () {
                 var $this = this;
@@ -61,23 +76,23 @@
                     url: "{% url 'ldap-sync:status' task_id=async_result.id %}"
                 }).done(function (data) {
                     var task = data.task;
-
-                    var $tableTr = $("#ldap-sync");
-                    $tableTr.find('.task-status').text(task.ready);
-                    $tableTr.find('.task-failed').text(task.failed);
-                    $tableTr.find('.task-result').text(task.failed ? task.traceback : task.ouput);
-
+                    var $tableTr = $this.update_status.bind($this, task)();
                     if (!task.ready) {
-                        setTimeout(function () {
-                            $this.update_progress.bind($this, {table: $tableTr})();
-                            $this.ajax()
-                        }, 500)
+                        setTimeout(function () { $this.ajax() }, 500)
                     } else {
-                        $this.update_progress.bind($this, {counter: 0, table: $tableTr})();
+                        $this.stop_progress.bind($this, $tableTr)();
                     }
+                }).fail(function(data, textStatus, errorThrown) {
+                    var $tableTr = $this.update_status.bind($this, {
+                        ready: false,
+                        failed: true,
+                        traceback: textStatus + ": " + (errorThrown ? errorThrown : "Internal Server Error")
+                    })();
+                    $this.stop_progress.bind($this, $tableTr)();
                 })
             }
         };
+        ldap_sync.init();
         ldap_sync.ajax();
     </script>
     </body>
