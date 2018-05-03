@@ -1,4 +1,9 @@
 {% load i18n %}
-<form id="ldap-sync-form" action="" method="post">{% csrf_token %}
-    <button class="btn btn-success btn-lg {% if block %}btn-block{% endif %}" type="submit">{% trans 'Sync ldap users' %}</button>
+<form id="ldap-sync-form" action="" method="post" onsubmit="return{% if celery %} true;{% else %} false;{% endif %}">
+    {% csrf_token %}
+    <button class="btn btn-success btn-lg {% if block %}btn-block{% endif %} {% if not celery %}disabled{% endif %}"
+            type="submit">{% trans 'Sync ldap users' %}</button>
+    {% if not celery %}
+        <span class="label label-danger">{% trans 'celery: unavailable service' %}</span>
+    {% endif %}
 </form>

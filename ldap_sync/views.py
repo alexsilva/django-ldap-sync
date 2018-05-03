@@ -1,13 +1,15 @@
 import importlib
 
+from celery import current_app
 from celery.result import AsyncResult
-from django.utils.translation import ugettext as _
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.translation import ugettext as _
 from django.views.generic import View
-from django.contrib.auth import get_user_model
-from celery import current_app
+
+from .utils import CeleryWorker
 
 User = get_user_model()
 
@@ -30,18 +32,27 @@ class SyncView(View):
 
         self.task = getattr(importlib.import_module(package), task)
 
+        self.celery_available = CeleryWorker.is_running()
+
     def get(self, request):
-        return render(request, self.template)
+        return render(request, self.template, context={
+            'celery': self.celery_available
+        })
 
     def post(self, request, **kwargs):
         async_result = self.task.delay()
         return render(request, self.template_status, context={
-            'async_result': async_result
+            'async_result': async_result,
+            'celery': self.celery_available
         })
 
 
 class SyncStatusView(View):
     """Checking the status of a previously executed task"""
+    def __init__(self, *args, **kwargs):
+        super(SyncStatusView, self).__init__(*args, **kwargs)
+        self.celery_available = CeleryWorker.is_running()
+
     def get(self, request, **kwargs):
         """Reports task status"""
         task_id = str(kwargs.get("task_id"))
@@ -50,6 +61,7 @@ class SyncStatusView(View):
             'task': {
                 'id': async_result.id,
                 'ready': async_result.ready(),
+                'celery': self.celery_available
             }
         }
         if async_result.failed():
@@ -64,4 +76,9 @@ class SyncStatusView(View):
                 'user_count': User.objects.all().count(),
                 'label': _("User count")
             }
+        if not self.celery_available:  # stop
+            data['task']['ready'] = True
+            data['task']['failed'] = True
+            data['task']['traceback'] = _("celery: unavailable service")
+
         return JsonResponse(data)
