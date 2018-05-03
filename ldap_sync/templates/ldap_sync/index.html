@@ -1,13 +1,20 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}LDAP Sync{% endblock %}</title>
-    {% block extrahead %}{% endblock %}
+    {% block extrahead %}
+        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap.min.css' %}" >
+        <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap-theme.css' %}" >
+        <script type="application/javascript" src="{% static 'ldap_sync/js/jquery-2.2.4.min.js' %}"></script>
+    {% endblock %}
 </head>
+
+{% block body %}
 <body>
-<form action="" method="post">{% csrf_token %}
-    <button type="submit">Sync</button>
-</form>
+{% include "ldap_sync/includes/form_status.html" %}
 </body>
+<script type="application/javascript" src="{% static 'ldap_sync/js/bootstrap.min.js' %}"></script>
+{% endblock %}
 </html>
