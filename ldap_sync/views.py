@@ -53,7 +53,10 @@ class SyncStatusView(View):
         }
         if async_result.failed():
             data['task']['failed'] = True
-            data['task']['traceback'] = async_result.traceback
+            if request.user.is_authenticated() and request.user.is_superuser:
+                data['task']['traceback'] = async_result.traceback
+            else:
+                data['task']['traceback'] = "Sync error"
         else:
             data['task']['failed'] = False
             data['task']['output'] = {
