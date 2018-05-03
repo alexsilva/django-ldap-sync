@@ -35,7 +35,7 @@
             </tr>
             </tbody>
         </table>
-        <div class="panel-footer"></div>
+        <div class="panel-footer" id="ldap-sync-info"></div>
     </div>
     <script type="application/javascript">
         var ldap_sync = {
@@ -44,6 +44,7 @@
                 this.form = $("form#ldap-sync-form");
                 this.button = this.form.find("button[type=submit]");
                 if (this.button != null) this.button.prop('disabled', true);
+                this.syncinfo = $("#ldap-sync-info");
             },
             repeat: function (s, n) {
                 var a = [];
@@ -60,7 +61,7 @@
                 table.find('.task-progress').text("");
                 this.counter = 0;
                 if (this.button != null)
-                    this.button.prop('disabled', false)
+                    this.button.prop('disabled', false);
             },
             update_status : function(options) {
                 var $tableTr = $("#ldap-sync");
@@ -69,8 +70,14 @@
                 var result = $tableTr.find('.task-result');
                 if (options.failed) {
                     result.text(options.traceback);
+                    this.syncinfo.text("{% trans 'Sync failed' %}");
                 } else {
                     result.text(options.output.label + ": " + options.output.user_count);
+                    if (options.ready) {
+                        this.syncinfo.text("{% trans 'Success' %}");
+                    } else {
+                        this.syncinfo.text("{% trans 'Synchronizing...' %}");
+                    }
                 }
                 this.update_progress($tableTr);
                 return $tableTr;
@@ -94,6 +101,7 @@
                         traceback: textStatus + ": " + (errorThrown ? errorThrown : "Internal Server Error")
                     })();
                     $this.stop_progress.bind($this, $tableTr)();
+                    $this.syncinfo.text("{% trans 'Sync failed' %}");
                 })
             }
         };
