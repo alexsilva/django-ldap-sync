@@ -12,27 +12,31 @@
     {% endblock %}
 </head>
 {% block body %}
-    <body>
-    {% include "ldap_sync/includes/form_status.html" %}
-    <table class="table table-condensed table-striped ldap-sync">
-        <thead>
-        <tr>
-            <th scope="col">{% trans 'PROGRESS' %}</th>
-            <th scope="col">{% trans 'READY' %}</th>
-            <th scope="col">{% trans 'FAILED' %}</th>
-            <th scope="col">{% trans 'RESULT' %}</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr id="ldap-sync">
-            <td class="task-progress"></td>
-            <td class="task-status"></td>
-            <td class="task-failed"></td>
-            <td class="task-result"></td>
-        </tr>
-        </tbody>
-    </table>
-
+<body>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            {% include "ldap_sync/includes/form_status.html" %}
+        </div>
+        <table class="table table-condensed table-striped ldap-sync">
+            <thead>
+            <tr>
+                <th scope="col">{% trans 'PROGRESS' %}</th>
+                <th scope="col">{% trans 'READY' %}</th>
+                <th scope="col">{% trans 'FAILED' %}</th>
+                <th scope="col">{% trans 'RESULT' %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr id="ldap-sync">
+                <td class="task-progress"></td>
+                <td class="task-status"></td>
+                <td class="task-failed"></td>
+                <td class="task-result"></td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="panel-footer"></div>
+    </div>
     <script type="application/javascript">
         var ldap_sync = {
             counter: 0,
