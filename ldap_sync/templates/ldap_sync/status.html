@@ -1,9 +1,10 @@
 {% load staticfiles %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}LDAP Sync status{% endblock %}</title>
+    <title>{% block title %}{% trans 'LDAP Sync Status' %}{% endblock %}</title>
     {% block extrahead %}
         <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap-theme.css' %}">
@@ -16,10 +17,10 @@
     <table class="table table-condensed table-striped ldap-sync">
         <thead>
         <tr>
-            <th scope="col">PROGRESS</th>
-            <th scope="col">READY</th>
-            <th scope="col">FAILED</th>
-            <th scope="col">RESULT</th>
+            <th scope="col">{% trans 'PROGRESS' %}</th>
+            <th scope="col">{% trans 'READY' %}</th>
+            <th scope="col">{% trans 'FAILED' %}</th>
+            <th scope="col">{% trans 'RESULT' %}</th>
         </tr>
         </thead>
         <tbody>

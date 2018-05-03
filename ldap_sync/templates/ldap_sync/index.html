@@ -1,9 +1,10 @@
 {% load staticfiles %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}LDAP Sync{% endblock %}</title>
+    <title>{% block title %}{% trans 'LDAP Sync' %}{% endblock %}</title>
     {% block extrahead %}
         <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap.min.css' %}" >
         <link rel="stylesheet" type="text/css" href="{% static 'ldap_sync/css/bootstrap-theme.css' %}" >

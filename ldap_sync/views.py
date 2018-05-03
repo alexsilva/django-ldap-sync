@@ -1,6 +1,7 @@
 import importlib
 
 from celery.result import AsyncResult
+from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -56,11 +57,11 @@ class SyncStatusView(View):
             if request.user.is_authenticated() and request.user.is_superuser:
                 data['task']['traceback'] = async_result.traceback
             else:
-                data['task']['traceback'] = "Sync error"
+                data['task']['traceback'] = _("Sync error")
         else:
             data['task']['failed'] = False
             data['task']['output'] = {
                 'user_count': User.objects.all().count(),
-                'label': "User count"
+                'label': _("User count")
             }
         return JsonResponse(data)
