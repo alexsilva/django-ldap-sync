@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-04-24 14:46-0300\n"
+"POT-Creation-Date: 2018-05-03 15:31-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -81,3 +81,52 @@ msgstr "Informação de registro"
 #: .\ldap_sync\models.py:58
 msgid "Log Infos"
 msgstr "Informações de registro"
+
+#: .\ldap_sync\templates\ldap_sync\includes\form_status.html:3
+msgid "Sync ldap users"
+msgstr "Sincronizar usuários ldap"
+
+#: .\ldap_sync\templates\ldap_sync\index.html:7
+msgid "LDAP Sync"
+msgstr "LDAP Sicronização"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:7
+msgid "LDAP Sync Status"
+msgstr "LDAP Estado da Sicronização"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:23
+msgid "PROGRESS"
+msgstr "PROGRESSO"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:24
+msgid "READY"
+msgstr "PRONTO"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:25
+msgid "FAILED"
+msgstr "FALHOU"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:26
+msgid "RESULT"
+msgstr "RESULTADO"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:73
+#: .\ldap_sync\templates\ldap_sync\status.html:104
+msgid "Sync failed"
+msgstr "Falha na sincronização"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:77
+msgid "Success"
+msgstr "Sucesso"
+
+#: .\ldap_sync\templates\ldap_sync\status.html:79
+msgid "Synchronizing..."
+msgstr "Sincronizando..."
+
+#: .\ldap_sync\views.py:60
+msgid "Sync error"
+msgstr "Erro na sincronização"
+
+#: .\ldap_sync\views.py:65
+msgid "User count"
+msgstr "Total de usuários"

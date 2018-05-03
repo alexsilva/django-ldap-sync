@@ -1,3 +1,4 @@
+{% load i18n %}
 <form id="ldap-sync-form" action="" method="post">{% csrf_token %}
-    <button class="btn btn-success btn-lg {% if block %}btn-block{% endif %}" type="submit">Sync ldap users</button>
+    <button class="btn btn-success btn-lg {% if block %}btn-block{% endif %}" type="submit">{% trans 'Sync ldap users' %}</button>
 </form>
