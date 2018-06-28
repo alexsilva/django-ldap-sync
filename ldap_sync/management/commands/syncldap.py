@@ -1,3 +1,4 @@
+import json
 import traceback
 from StringIO import StringIO
 
@@ -75,14 +76,14 @@ class UserSync(object):
         self.logger.set_synchronizing(True)
 
     @staticmethod
-    def _ldapobject_save(user, old_username, user_data):
+    def _ldapobject_save(user, old_username, attributes):
         # Saves the data in json of the object.
         ldap_object, created = LdapObject.objects.get_or_create(user=user)
         ldap_object.account_name = old_username
-        ldap_object.data = user_data['json']
+        ldap_object.data = json.dumps(attributes)
         ldap_object.save()
 
-    def execute(self, ldap_users):
+    def execute(self, items):
         """ Synchronize a set of users """
         if not self.username_is_unique:
             raise ImproperlyConfigured(u"Field '%s' must be unique" % self.username_field)
@@ -91,14 +92,13 @@ class UserSync(object):
             error_msg = (u"LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
             raise ImproperlyConfigured(error_msg)
 
-        total = len(ldap_users)
+        total = len(items)
         self.counter += total
 
         self.logger.info(u"Retrieved %d users" % total)
         self.logger.set_total(self.counter)
 
-        for user_data in ldap_users:
-            attributes = user_data['attributes']
+        for attributes in items:
             defaults = {}
             try:
                 for name, value in attributes.items():
@@ -142,7 +142,7 @@ class UserSync(object):
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
-                self._ldapobject_save(user, old_username, user_data)
+                self._ldapobject_save(user, old_username, attributes)
                 updated = False
                 if created:
                     self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
