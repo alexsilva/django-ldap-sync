@@ -1,7 +1,8 @@
+import copy
 import json
 import traceback
 from StringIO import StringIO
-
+from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
@@ -65,6 +66,24 @@ class UserSync(object):
         self.pks = set()
         self.counter = 0
         self._validate_username_field()
+        self.user_attributes = copy.deepcopy(self.user_attributes)
+        self.field_types = self._get_field_types()
+
+    def _get_field_types(self):
+        """Extracts the type of user field
+        thumbnailPhoto=photo_ldap:imagefield
+        thumbnailPhoto=photo_ldap
+        """
+        field_types = {}
+        for key in self.user_attributes:
+            value = self.user_attributes[key]
+            try:
+                value_name, field_type = value.split(":", 1)
+            except ValueError:
+                continue
+            self.user_attributes[key] = value_name
+            field_types[key] = field_types[value_name] = field_type
+        return field_types
 
     def _validate_username_field(self):
         """Validations on the user field"""
@@ -83,9 +102,35 @@ class UserSync(object):
         """Operations before running synchronization"""
         self.logger.set_synchronizing(True)
 
-    @staticmethod
-    def _ldapobject_save(user, old_username, attributes):
+    def transform_imagefield(self, field_name, attributes):
+        """Converts data from a binary image to BytesIO"""
+        attributes[field_name] = ContentFile(attributes.pop(field_name))
+        return attributes[field_name]
+
+    def save_imagefield(self, user, fields):
+        """Assigns an image to the user"""
+        try:
+            import slugify
+        except ImportError:
+            slugify = None
+        for field_name in fields:
+            image_name = getattr(user, self.username_field) + "-ldap-image"
+            if slugify is not None:
+                slugify = slugify.slugify(image_name)
+            getattr(user, field_name).save(image_name, fields[field_name], False)
+
+    def _exclude_fields(self, attributes, names=('imagefield',)):
+        """Exclude binary fields from attributes"""
+        attributes = copy.deepcopy(attributes)
+        fields = {}
+        for field_name in self.field_types:
+            if field_name in attributes and self.field_types[field_name] in names:
+                fields[field_name] = attributes.pop(field_name)
+        return attributes, fields
+
+    def _ldapobject_save(self, user, old_username, attributes):
         # Saves the data in json of the object.
+        attributes, _ = self._exclude_fields(attributes)
         ldap_object, created = LdapObject.objects.get_or_create(user=user)
         ldap_object.account_name = old_username
         ldap_object.data = json.dumps(attributes)
@@ -103,6 +148,12 @@ class UserSync(object):
             defaults = {}
             try:
                 for name, value in attributes.items():
+                    try:
+                        field_type = self.field_types.get(self.user_attributes[name])
+                        if field_type is not None:
+                            value = getattr(self, "transform_" + field_type)(name, attributes)
+                    except KeyError:
+                        pass
                     if isinstance(value, str):
                         value = unicode(value, self.user_attrvalue_encoding)
                     try:
@@ -138,8 +189,16 @@ class UserSync(object):
                 callback = import_string(self.user_default_callback)
                 kwargs['defaults'] = callback(**kwargs['defaults'])
 
+            defaults, attributes_pos_save = self._exclude_fields(defaults)
             try:
                 user, created = User.objects.get_or_create(**kwargs)
+
+                # pos save data
+                for attr_name in self.field_types.values():
+                    getattr(self, "save_" + attr_name)(user, attributes_pos_save)
+
+                # save all
+                user.save()
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
