@@ -117,6 +117,10 @@ class UserSync(object):
 
         magic = Magic.load()
 
+        class InvalidImage(Exception):
+            """An exception that occurs when the image is invalid"""
+            pass
+
         def get_file_ext(fext=None):
             """Try to get file extension"""
             if isinstance(content, ContentFile):
@@ -132,13 +136,16 @@ class UserSync(object):
             type_name = mime.split("/", 1)[0]
 
             # Check if it's an image
-            assert self.field_types[field_name].startswith(type_name)
+            if not self.field_types[field_name].startswith(type_name):
+                raise InvalidImage(mime)
 
             fext = mimetypes.guess_extension(mime)
 
             # Check if is a valid string
             assert isinstance(fext, basestring)
             return fext
+
+        username = getattr(user, self.username_field)
 
         for field_name in fields:
             image_name = "ldap-image-" + getattr(user, self.username_field)
@@ -149,9 +156,14 @@ class UserSync(object):
             if magic is not None:
                 try:
                     image_name += get_file_ext()
-                except Exception:
-                    username = getattr(user, self.username_field)
-                    self.logger.warning(u"failed to get user({0!s}) image file extension".format(username))
+                except InvalidImage as err:
+                    self.logger.warning(u"Failed to get user ({0!s}) "
+                                        u"image ({1!s}) file extension".format(username, err))
+                    # Discard the file for being invalid.
+                    continue
+                except Exception as err:
+                    self.logger.warning(u"Failed to get user ({0!s}) image (1!s) "
+                                        u"file extension".format(username, err))
 
             getattr(user, field_name).save(image_name, content, False)
 
