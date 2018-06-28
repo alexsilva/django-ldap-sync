@@ -1,5 +1,6 @@
 import copy
 import json
+import mimetypes
 import traceback
 from StringIO import StringIO
 from django.core.files.base import ContentFile
@@ -14,7 +15,7 @@ from django.utils.module_loading import import_string
 from ldap_sync.logger import Logger
 from ldap_sync.models import LdapObject
 from ldap_sync.service import LdapSearch
-from ldap_sync.utils import get_setting
+from ldap_sync.utils import get_setting, Magic
 
 # django user model
 User = get_user_model()
@@ -113,11 +114,46 @@ class UserSync(object):
             import slugify
         except ImportError:
             slugify = None
+
+        magic = Magic.load()
+
+        def get_file_ext(fext=None):
+            """Try to get file extension"""
+            if isinstance(content, ContentFile):
+                buff = content.file.getvalue()
+            else:
+                buff = content
+
+            mime = magic.from_buffer(buff, mime=True)
+
+            # check if string
+            assert isinstance(mime, basestring)
+
+            type_name = mime.split("/", 1)[0]
+
+            # Check if it's an image
+            assert self.field_types[field_name].startswith(type_name)
+
+            fext = mimetypes.guess_extension(mime)
+
+            # Check if is a valid string
+            assert isinstance(fext, basestring)
+            return fext
+
         for field_name in fields:
-            image_name = getattr(user, self.username_field) + "-ldap-image"
+            image_name = "ldap-image-" + getattr(user, self.username_field)
+            content = fields[field_name]
             if slugify is not None:
                 slugify = slugify.slugify(image_name)
-            getattr(user, field_name).save(image_name, fields[field_name], False)
+            # Add file extension
+            if magic is not None:
+                try:
+                    image_name += get_file_ext()
+                except Exception:
+                    username = getattr(user, self.username_field)
+                    self.logger.warning(u"failed to get user({0!s}) image file extension".format(username))
+
+            getattr(user, field_name).save(image_name, content, False)
 
     def _exclude_fields(self, attributes, names=('imagefield',)):
         """Exclude binary fields from attributes"""
