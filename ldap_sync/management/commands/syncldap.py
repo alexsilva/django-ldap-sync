@@ -52,9 +52,7 @@ class UserSync(object):
     removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
                                                   default=[])
     username_callbacks = get_setting('LDAP_SYNC_USERNAME_CALLBACKS', default=[])
-    username_field = get_setting('LDAP_SYNC_USERNAME_FIELD')
-    if username_field is None:
-        username_field = getattr(User, 'USERNAME_FIELD', 'username')
+    username_field = (get_setting('LDAP_SYNC_USERNAME_FIELD') or getattr(User, 'USERNAME_FIELD', 'username'))
     user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
 
@@ -64,9 +62,19 @@ class UserSync(object):
         :param command: Django command
         """
         self.command = command
-        self.username_is_unique = User._meta.get_field(self.username_field).unique
         self.pks = set()
         self.counter = 0
+        self._validate_username_field()
+
+    def _validate_username_field(self):
+        """Validations on the user field"""
+        is_unique = User._meta.get_field(self.username_field).unique
+
+        if not is_unique:
+            raise ImproperlyConfigured(u"Field '%s' must be unique" % self.username_field)
+
+        if self.username_field not in self.user_attributes.values():
+            raise ImproperlyConfigured(u"LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
 
     def __getattr__(self, item):
         return getattr(self.command, item)
@@ -85,13 +93,6 @@ class UserSync(object):
 
     def execute(self, items):
         """ Synchronize a set of users """
-        if not self.username_is_unique:
-            raise ImproperlyConfigured(u"Field '%s' must be unique" % self.username_field)
-
-        if self.username_field not in self.user_attributes.values():
-            error_msg = (u"LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
-            raise ImproperlyConfigured(error_msg)
-
         total = len(items)
         self.counter += total
 
