@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import mimetypes
 import traceback
@@ -148,7 +149,7 @@ class UserSync(object):
         username = getattr(user, self.username_field)
 
         for field_name in fields:
-            image_name = "ldap-image-" + getattr(user, self.username_field)
+            image_name = "ldap-image-" + hashlib.md5(str(user.pk)).hexdigest()
             content = fields[field_name]
             if slugify is not None:
                 slugify = slugify.slugify(image_name)
