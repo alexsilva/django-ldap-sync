@@ -16,7 +16,7 @@ from django.utils.module_loading import import_string
 from ldap_sync.logger import Logger
 from ldap_sync.models import LdapObject
 from ldap_sync.service import LdapSearch
-from ldap_sync.utils import get_setting, Magic
+from ldap_sync.utils import get_setting
 
 # django user model
 User = get_user_model()
@@ -58,6 +58,7 @@ class UserSync(object):
     username_field = (get_setting('LDAP_SYNC_USERNAME_FIELD') or getattr(User, 'USERNAME_FIELD', 'username'))
     user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
+    imagefield_default_ext = get_setting('LDAP_SYNC_IMAGEFIELD_DEFAULT_EXT', default=None)
 
     def __init__(self, command):
         """
@@ -116,13 +117,17 @@ class UserSync(object):
         except ImportError:
             slugify = None
 
-        magic = Magic.load()
+        try:
+            import magic
+        except ImportError:
+            self.logger.error(traceback.format_exc())
+            magic = None
 
         class InvalidImage(Exception):
             """An exception that occurs when the image is invalid"""
             pass
 
-        def get_file_ext(fext=None):
+        def get_file_ext():
             """Try to get file extension"""
             if isinstance(content, ContentFile):
                 buff = content.file.getvalue()
@@ -142,9 +147,10 @@ class UserSync(object):
 
             fext = mimetypes.guess_extension(mime)
 
-            # Check if is a valid string
-            assert isinstance(fext, basestring)
-            return fext
+            if isinstance(fext, basestring):
+                fext = fext.strip()
+
+            return fext or self.imagefield_default_ext
 
         username = getattr(user, self.username_field)
 
@@ -160,12 +166,11 @@ class UserSync(object):
                 except InvalidImage as err:
                     self.logger.warning(u"Failed to get user ({0!s}) "
                                         u"image ({1!s}) file extension".format(username, err))
-                    # Discard the file for being invalid.
-                    continue
+                    image_name += self.imagefield_default_ext
                 except Exception as err:
                     self.logger.warning(u"Failed to get user ({0!s}) image (1!s) "
                                         u"file extension".format(username, err))
-
+                    image_name += self.imagefield_default_ext
             getattr(user, field_name).save(image_name, content, False)
 
     def _exclude_fields(self, attributes, names=('imagefield',)):
