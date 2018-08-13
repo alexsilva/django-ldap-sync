@@ -250,9 +250,6 @@ class UserSync(object):
                 # pos save data
                 for attr_name in self.field_types.values():
                     getattr(self, "save_" + attr_name)(user, attributes_pos_save)
-
-                # save all
-                user.save()
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
