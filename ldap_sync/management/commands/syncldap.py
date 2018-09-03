@@ -66,6 +66,11 @@ class UserSync(object):
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
     imagefield_default_ext = get_setting('LDAP_SYNC_IMAGEFIELD_DEFAULT_EXT', default=None)
 
+    imagefield_filename_prefix = "ldap-image-"
+
+    class InvalidImage(Exception):
+        """An exception that occurs when the image is invalid"""
+
     def __init__(self, command):
         """
         Initializing method
@@ -133,10 +138,6 @@ class UserSync(object):
     def save_imagefield(self, user, fields):
         """Assigns an image to the user"""
 
-        class InvalidImage(Exception):
-            """An exception that occurs when the image is invalid"""
-            pass
-
         def get_file_ext():
             """Try to get file extension"""
             if isinstance(content, ContentFile):
@@ -153,7 +154,7 @@ class UserSync(object):
 
             # Check if it's an image
             if not self.field_types[field_name].startswith(type_name):
-                raise InvalidImage("mimetype '%s' is not an image" % mime)
+                raise self.InvalidImage("mimetype '%s' is not an image" % mime)
 
             fext = mimetypes.guess_extension(mime)
 
@@ -163,14 +164,13 @@ class UserSync(object):
             return fext or self.imagefield_default_ext
 
         username = getattr(user, self.username_field)
-        image_prefix = "ldap-image-"
 
         for field_name in fields:
             content = fields[field_name]
             if not content:
                 continue
 
-            image_name = image_prefix + hashlib.md5(str(user.pk)).hexdigest()
+            image_name = self.imagefield_filename_prefix + hashlib.md5(str(user.pk)).hexdigest()
 
             if slugify is not None:
                 image_name = slugify.slugify(image_name)
@@ -179,7 +179,7 @@ class UserSync(object):
             if self.magic is not None:
                 try:
                     image_name += get_file_ext()
-                except InvalidImage as err:
+                except self.InvalidImage as err:
                     self.logger.warning(u"Failed to get user ({0!s}) "
                                         u"image ({1!s}) file extension".format(username, err))
                     continue
