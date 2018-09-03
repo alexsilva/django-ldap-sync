@@ -107,7 +107,13 @@ class UserSync(object):
 
     def transform_imagefield(self, field_name, attributes):
         """Converts data from a binary image to BytesIO"""
-        attributes[field_name] = ContentFile(attributes.pop(field_name))
+        content = attributes.pop(field_name)
+        if isinstance(content, basestring):
+            content = content.strip()
+        if content:
+            attributes[field_name] = ContentFile(content)
+        else:
+            attributes[field_name] = None
         return attributes[field_name]
 
     def save_imagefield(self, user, fields):
@@ -153,10 +159,15 @@ class UserSync(object):
             return fext or self.imagefield_default_ext
 
         username = getattr(user, self.username_field)
+        image_prefix = "ldap-image-"
 
         for field_name in fields:
-            image_name = "ldap-image-" + hashlib.md5(str(user.pk)).hexdigest()
             content = fields[field_name]
+            if not content:
+                continue
+
+            image_name = image_prefix + hashlib.md5(str(user.pk)).hexdigest()
+
             if slugify is not None:
                 slugify = slugify.slugify(image_name)
             # Add file extension
