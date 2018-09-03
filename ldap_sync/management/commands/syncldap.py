@@ -78,6 +78,14 @@ class UserSync(object):
         self.user_attributes = copy.deepcopy(self.user_attributes)
         self.field_types = self._get_field_types()
 
+        try:
+            import magic
+        except ImportError:
+            self.logger.error(traceback.format_exc())
+            magic = None
+
+        self.magic = magic
+
     def _get_field_types(self):
         """Extracts the type of user field
         thumbnailPhoto=photo_ldap:imagefield
@@ -124,11 +132,6 @@ class UserSync(object):
 
     def save_imagefield(self, user, fields):
         """Assigns an image to the user"""
-        try:
-            import magic
-        except ImportError:
-            self.logger.error(traceback.format_exc())
-            magic = None
 
         class InvalidImage(Exception):
             """An exception that occurs when the image is invalid"""
@@ -141,7 +144,7 @@ class UserSync(object):
             else:
                 buff = content
 
-            mime = magic.from_buffer(buff, mime=True)
+            mime = self.magic.from_buffer(buff, mime=True)
 
             # check if string
             assert isinstance(mime, basestring)
@@ -173,7 +176,7 @@ class UserSync(object):
                 image_name = slugify.slugify(image_name)
 
             # Add file extension
-            if magic is not None:
+            if self.magic is not None:
                 try:
                     image_name += get_file_ext()
                 except InvalidImage as err:
