@@ -149,7 +149,7 @@ class UserSync(object):
 
             # Check if it's an image
             if not self.field_types[field_name].startswith(type_name):
-                raise InvalidImage(mime)
+                raise InvalidImage("mimetype '%s' is not an image" % mime)
 
             fext = mimetypes.guess_extension(mime)
 
@@ -177,11 +177,13 @@ class UserSync(object):
                 except InvalidImage as err:
                     self.logger.warning(u"Failed to get user ({0!s}) "
                                         u"image ({1!s}) file extension".format(username, err))
-                    image_name += self.imagefield_default_ext
+                    continue
                 except Exception as err:
                     self.logger.warning(u"Failed to get user ({0!s}) image (1!s) "
                                         u"file extension".format(username, err))
-                    image_name += self.imagefield_default_ext
+                    continue
+            else:
+                image_name += self.imagefield_default_ext
             getattr(user, field_name).save(image_name, content, False)
 
     def _exclude_fields(self, attributes, names=('imagefield',)):
