@@ -18,6 +18,12 @@ from ldap_sync.models import LdapObject
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
 
+try:
+    import slugify
+except ImportError:
+    slugify = None
+
+
 # django user model
 User = get_user_model()
 
@@ -119,11 +125,6 @@ class UserSync(object):
     def save_imagefield(self, user, fields):
         """Assigns an image to the user"""
         try:
-            import slugify
-        except ImportError:
-            slugify = None
-
-        try:
             import magic
         except ImportError:
             self.logger.error(traceback.format_exc())
@@ -169,7 +170,8 @@ class UserSync(object):
             image_name = image_prefix + hashlib.md5(str(user.pk)).hexdigest()
 
             if slugify is not None:
-                slugify = slugify.slugify(image_name)
+                image_name = slugify.slugify(image_name)
+
             # Add file extension
             if magic is not None:
                 try:
