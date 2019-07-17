@@ -82,7 +82,9 @@ class UserSync(object):
         self.counter = 0
         self._validate_username_field()
         self.user_attributes = copy.deepcopy(self.user_attributes)
-        self.field_types = self._get_field_types()
+        self.field_types = ('imagefield',)
+        self.field_type_map = self._get_field_types()
+        self.field_types_names = set(self.field_type_map.values())
 
         try:
             import magic
@@ -154,7 +156,7 @@ class UserSync(object):
             type_name = mime.split("/", 1)[0]
 
             # Check if it's an image
-            if not self.field_types[field_name].startswith(type_name):
+            if not self.field_type_map[field_name].startswith(type_name):
                 raise self.InvalidImage("mimetype '%s' is not an image" % mime)
 
             fext = mimetypes.guess_extension(mime)
@@ -192,18 +194,19 @@ class UserSync(object):
                 image_name += self.imagefield_default_ext
             getattr(user, field_name).save(image_name, content, False)
 
-    def _exclude_fields(self, attributes, names=('imagefield',)):
+    def _exclude_fields(self, attributes, names=()):
         """Exclude binary fields from attributes"""
         attributes = copy.deepcopy(attributes)
-        fields = {}
-        for field_name in self.field_types:
-            if field_name in attributes and self.field_types[field_name] in names:
-                fields[field_name] = attributes.pop(field_name)
-        return attributes, fields
+        excluded_fields = {}
+        for field_name in self.field_type_map:
+            if field_name in attributes and self.field_type_map[field_name] in names:
+                excluded_fields[field_name] = attributes.pop(field_name)
+        return attributes, excluded_fields
 
     def _ldapobject_update(self, user, attributes, **kwargs):
         """saves metadata from the synchronized user in the database"""
-        attributes, _ = self._exclude_fields(attributes)
+        attributes, _ = self._exclude_fields(attributes,
+                                             names=self.field_types)
         qs = LdapObject.objects.filter(user=user)
         if not qs.exists():
             LdapObject.objects.create(
@@ -229,7 +232,7 @@ class UserSync(object):
             try:
                 for name, value in attributes.items():
                     try:
-                        field_type = self.field_types.get(self.user_attributes[name])
+                        field_type = self.field_type_map.get(self.user_attributes[name])
                         if field_type is not None:
                             value = getattr(self, "transform_" + field_type)(name, attributes)
                     except KeyError:
@@ -269,13 +272,15 @@ class UserSync(object):
                 callback = import_string(self.user_default_callback)
                 kwargs['defaults'] = callback(**kwargs['defaults'])
 
-            defaults, attributes_pos_save = self._exclude_fields(defaults)
+            defaults, db_field_values = self._exclude_fields(
+                defaults, names=self.field_types)
             try:
                 user, created = User.objects.get_or_create(**kwargs)
 
                 # pos save data
-                for attr_name in self.field_types.values():
-                    getattr(self, "save_" + attr_name)(user, attributes_pos_save)
+                for field_type in self.field_types_names:
+                    method = getattr(self, "save_" + field_type)
+                    method(user, db_field_values)
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
