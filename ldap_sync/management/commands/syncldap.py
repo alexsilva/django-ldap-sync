@@ -138,6 +138,16 @@ class UserSync(object):
             attributes[field_name] = None
         return attributes[field_name]
 
+    @staticmethod
+    def _file_hash(fp):
+        block_size = 65536
+        hasher = hashlib.sha1()
+        buf = fp.read(block_size)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = fp.read(block_size)
+        return hasher.hexdigest()
+
     def save_imagefield(self, user, fields):
         """Assigns an image to the user"""
 
@@ -192,7 +202,15 @@ class UserSync(object):
                     continue
             else:
                 image_name += self.imagefield_default_ext
-            getattr(user, field_name).save(image_name, content, False)
+            field = getattr(user, field_name)
+            try:
+                # check file changes
+                with field.file as fp:
+                    changed = self._file_hash(fp) != self._file_hash(content)
+            except Exception:
+                changed = True
+            field.save(image_name, content, False)
+            return changed
 
     def _exclude_fields(self, attributes, names=()):
         """Exclude binary fields from attributes"""
@@ -274,17 +292,18 @@ class UserSync(object):
 
             defaults, db_field_values = self._exclude_fields(
                 defaults, names=self.field_types)
+            user_updated = False
             try:
                 user, created = User.objects.get_or_create(**kwargs)
 
                 # pos save data
                 for field_type in self.field_types_names:
                     method = getattr(self, "save_" + field_type)
-                    method(user, db_field_values)
+                    if method(user, db_field_values):  # has field type changes
+                        user_updated = True
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
-                updated = False
                 if created:
                     self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
@@ -302,20 +321,20 @@ class UserSync(object):
                             continue
                         if user_value != ldap_value:
                             setattr(user, name, ldap_value)
-                            updated = True
+                            user_updated = True
 
-                    if updated:
+                    if user_updated:
                         self.logger.debug(u"Updated user {0!s}/{1!s}".format(username, old_username))
 
                     self._ldapobject_update(user, attributes,
                                             old_username=old_username,
-                                            user_updated=updated)
+                                            user_updated=user_updated)
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
-                    callback(user, attributes, created, updated)
+                    callback(user, attributes, created, user_updated)
 
-                if updated:
+                if user_updated:
                     user.save()
 
                 if self.removed_user_callbacks:
