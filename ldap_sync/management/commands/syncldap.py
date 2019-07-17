@@ -4,10 +4,11 @@ import json
 import mimetypes
 import traceback
 from StringIO import StringIO
-from django.core.files.base import ContentFile
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import DataError
 from django.db import IntegrityError
@@ -200,13 +201,20 @@ class UserSync(object):
                 fields[field_name] = attributes.pop(field_name)
         return attributes, fields
 
-    def _ldapobject_save(self, user, old_username, attributes):
-        # Saves the data in json of the object.
+    def _ldapobject_update(self, user, attributes, **kwargs):
+        """saves metadata from the synchronized user in the database"""
         attributes, _ = self._exclude_fields(attributes)
-        ldap_object, created = LdapObject.objects.get_or_create(user=user)
-        ldap_object.account_name = old_username
-        ldap_object.data = json.dumps(attributes)
-        ldap_object.save()
+        qs = LdapObject.objects.filter(user=user)
+        if not qs.exists():
+            LdapObject.objects.create(
+                user=user,
+                account_name=kwargs['old_username'],
+                data=json.dumps(attributes))
+        elif kwargs['user_updated']:
+            qs.update(
+                account_name=kwargs['old_username'],
+                data=json.dumps(attributes)
+            )
 
     def execute(self, items):
         """ Synchronize a set of users """
@@ -271,13 +279,16 @@ class UserSync(object):
             except (IntegrityError, DataError) as e:
                 self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
-                self._ldapobject_save(user, old_username, attributes)
                 updated = False
                 if created:
                     self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
+                    user.save()
+                    self._ldapobject_update(user, attributes,
+                                            old_username=old_username,
+                                            user_updated=True)
                 else:
-                    for name, ldap_value in defaults.items():
+                    for name, ldap_value in defaults.iteritems():
                         try:
                             user_value = getattr(user, name)
                         except AttributeError:
@@ -287,14 +298,20 @@ class UserSync(object):
                         if user_value != ldap_value:
                             setattr(user, name, ldap_value)
                             updated = True
+
                     if updated:
                         self.logger.debug(u"Updated user {0!s}/{1!s}".format(username, old_username))
+
+                    self._ldapobject_update(user, attributes,
+                                            old_username=old_username,
+                                            user_updated=updated)
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
                     callback(user, attributes, created, updated)
 
-                user.save()
+                if updated:
+                    user.save()
 
                 if self.removed_user_callbacks:
                     self.pks.add(user.pk)
