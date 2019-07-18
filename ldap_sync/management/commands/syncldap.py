@@ -148,7 +148,7 @@ class UserSync(object):
             buf = fp.read(block_size)
         return hasher.hexdigest()
 
-    def save_imagefield(self, user, fields):
+    def save_imagefield(self, user, field_values):
         """Assigns an image to the user"""
 
         def get_file_ext():
@@ -178,20 +178,19 @@ class UserSync(object):
 
         username = getattr(user, self.username_field)
 
-        for field_name in fields:
-            content = fields[field_name]
-            if not content:
-                continue
+        for field_name in field_values:
+            content = field_values[field_name]
+            field = getattr(user, field_name)
 
-            image_name = self.imagefield_filename_prefix + hashlib.md5(str(user.pk)).hexdigest()
+            filename = self.imagefield_filename_prefix + hashlib.md5(str(user.pk)).hexdigest()
 
             if slugify is not None:
-                image_name = slugify.slugify(image_name)
+                filename = slugify.slugify(filename)
 
             # Add file extension
-            if self.magic is not None:
+            if self.magic is not None and content is not None:
                 try:
-                    image_name += get_file_ext()
+                    filename += get_file_ext()
                 except self.InvalidImage as err:
                     self.logger.warning(u"Failed to get user ({0!s}) "
                                         u"image ({1!s}) file extension".format(username, err))
@@ -201,15 +200,20 @@ class UserSync(object):
                                         u"file extension".format(username, err))
                     continue
             else:
-                image_name += self.imagefield_default_ext
-            field = getattr(user, field_name)
+                filename += self.imagefield_default_ext
+            valid_content = content is not None
             try:
                 # check file changes
                 with field.file as fp:
-                    changed = self._file_hash(fp) != self._file_hash(content)
+                    if not valid_content and field.field.null:
+                        setattr(user, field_name, None)
+                        changed = True
+                    else:
+                        changed = self._file_hash(fp) != self._file_hash(content)
             except Exception:
-                changed = True
-            field.save(image_name, content, False)
+                changed = valid_content
+            if valid_content:
+                field.save(filename, content, False)
             return changed
 
     def _exclude_fields(self, attributes, names=()):
