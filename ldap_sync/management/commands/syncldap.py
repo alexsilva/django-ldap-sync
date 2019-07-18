@@ -292,7 +292,7 @@ class UserSync(object):
             }
             if isinstance(self.user_default_callback, (str, unicode)):
                 callback = import_string(self.user_default_callback)
-                kwargs['defaults'] = callback(**kwargs['defaults'])
+                kwargs['defaults'].update(callback(**kwargs['defaults']))
 
             defaults, db_field_values = self._exclude_fields(
                 defaults, names=self.field_types)
