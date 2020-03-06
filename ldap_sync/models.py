@@ -18,8 +18,8 @@ class LdapObject(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-        return u"{0.user}".format(self)
+    def __str__(self):
+        return "{0.user}".format(self)
 
     class Meta:
         verbose_name = _("Ldap User")
@@ -36,8 +36,8 @@ class LdapSyncLog(models.Model):
     # Total of synchronized objects
     total = models.IntegerField(_("Total"), default=0)
 
-    def __unicode__(self):
-        return u"{0.status}/{0.total}".format(self)
+    def __str__(self):
+        return "{0.status}/{0.total}".format(self)
 
     class Meta:
         verbose_name = _("Log")
@@ -49,9 +49,9 @@ class LdapSyncLogMeta(models.Model):
     level = models.SmallIntegerField(_("Level"))
     text = models.TextField(_("Text"))
 
-    def __unicode__(self):
+    def __str__(self):
         text = Truncator(self.text).chars(30, html=True)
-        return u"[{}] {}".format(logging.getLevelName(str(self.level)), text)
+        return "[{}] {}".format(logging.getLevelName(str(self.level)), text)
 
     class Meta:
         verbose_name = _("Log Info")
