@@ -3,7 +3,7 @@ import hashlib
 import json
 import mimetypes
 import traceback
-from StringIO import StringIO
+from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -18,6 +18,7 @@ from ldap_sync.logger import Logger
 from ldap_sync.models import LdapObject
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import get_setting
+from ldap_sync.utils import DEFAULT_ENCODING
 
 try:
     import slugify
@@ -28,8 +29,10 @@ except ImportError:
 # django user model
 User = get_user_model()
 
+text_types = (str, bytes)
+
 service_string = get_setting("LDAP_SYNC_SERVICE", default=LdapSearch)
-if isinstance(service_string, (str, unicode)):
+if isinstance(service_string, text_types):
     LdapSearch = import_string(service_string)
 
 
@@ -54,7 +57,7 @@ class UserSync(object):
     """
     user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
     user_attrvalue_encoding = get_setting('LDAP_SYNC_USER_ATTRVALUE_ENCODING',
-                                          default='utf-8')
+                                          default=DEFAULT_ENCODING)
     user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
                                            default={})
     user_default_callback = get_setting('LDAP_SYNC_USER_DEFAULT_CALLBACK',
@@ -115,10 +118,10 @@ class UserSync(object):
         is_unique = User._meta.get_field(self.username_field).unique
 
         if not is_unique:
-            raise ImproperlyConfigured(u"Field '%s' must be unique" % self.username_field)
+            raise ImproperlyConfigured("Field '%s' must be unique" % self.username_field)
 
         if self.username_field not in self.user_attributes.values():
-            raise ImproperlyConfigured(u"LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
+            raise ImproperlyConfigured("LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
 
     def __getattr__(self, item):
         return getattr(self.command, item)
@@ -130,7 +133,7 @@ class UserSync(object):
     def transform_imagefield(self, field_name, attributes):
         """Converts data from a binary image to BytesIO"""
         content = attributes.pop(field_name)
-        if isinstance(content, basestring):
+        if isinstance(content, text_types):
             content = content.strip()
         if content:
             attributes[field_name] = ContentFile(content)
@@ -160,8 +163,8 @@ class UserSync(object):
 
             mime = self.magic.from_buffer(buff, mime=True)
 
-            # check if string
-            assert isinstance(mime, basestring)
+            # check if string/bytes
+            assert isinstance(mime, text_types)
 
             type_name = mime.split("/", 1)[0]
 
@@ -171,7 +174,7 @@ class UserSync(object):
 
             fext = mimetypes.guess_extension(mime)
 
-            if isinstance(fext, basestring):
+            if isinstance(fext, text_types):
                 fext = fext.strip()
 
             return fext or self.imagefield_default_ext
@@ -192,12 +195,12 @@ class UserSync(object):
                 try:
                     filename += get_file_ext()
                 except self.InvalidImage as err:
-                    self.logger.warning(u"Failed to get user ({0!s}) "
-                                        u"image ({1!s}) file extension".format(username, err))
+                    self.logger.warning("Failed to get user ({0!s}) "
+                                        "image ({1!s}) file extension".format(username, err))
                     continue
                 except Exception as err:
-                    self.logger.warning(u"Failed to get user ({0!s}) image (1!s) "
-                                        u"file extension".format(username, err))
+                    self.logger.warning("Failed to get user ({0!s}) image (1!s) "
+                                        "file extension".format(username, err))
                     continue
             else:
                 filename += self.imagefield_default_ext
@@ -246,7 +249,7 @@ class UserSync(object):
         total = len(items)
         self.counter += total
 
-        self.logger.info(u"Retrieved %d users" % total)
+        self.logger.info("Retrieved %d users" % total)
         self.logger.set_total(self.counter)
 
         for attributes in items:
@@ -259,8 +262,8 @@ class UserSync(object):
                             value = getattr(self, "transform_" + field_type)(name, attributes)
                     except KeyError:
                         pass
-                    if isinstance(value, str):
-                        value = unicode(value, self.user_attrvalue_encoding)
+                    if isinstance(value, bytes):
+                        value = str(value, self.user_attrvalue_encoding)
                     try:
                         # If the value of the attribute does not exist, it uses the default.
                         if not value:
@@ -275,7 +278,7 @@ class UserSync(object):
             try:
                 username = defaults[self.username_field]
             except KeyError:
-                self.logger.warning(u"User is missing a required attribute '%s'" % self.username_field)
+                self.logger.warning("User is missing a required attribute '%s'" % self.username_field)
                 continue
 
             old_username = username
@@ -290,7 +293,7 @@ class UserSync(object):
                 self.username_field + '__exact': username,
                 'defaults': defaults,
             }
-            if isinstance(self.user_default_callback, (str, unicode)):
+            if isinstance(self.user_default_callback, text_types):
                 callback = import_string(self.user_default_callback)
                 kwargs['defaults'].update(callback(**kwargs['defaults']))
 
@@ -306,10 +309,10 @@ class UserSync(object):
                     if method(user, db_field_values):  # has field type changes
                         user_updated = True
             except (IntegrityError, DataError) as e:
-                self.logger.error(u"Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
+                self.logger.error("Error creating user {0!s}/{1!s}: {2!s}".format(username, old_username, e))
             else:
                 if created:
-                    self.logger.debug(u"Created user {0!s}/{1!s}".format(username, old_username))
+                    self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
                     user.save()
                     self._ldapobject_update(user, attributes,
@@ -321,14 +324,14 @@ class UserSync(object):
                             user_value = getattr(user, name)
                         except AttributeError:
                             # This should not happen because it would indicate that the user models are different.
-                            self.logger.debug(u"User {0!s} does not have attribute {1!s}".format(user, name))
+                            self.logger.debug("User {0!s} does not have attribute {1!s}".format(user, name))
                             continue
                         if user_value != ldap_value:
                             setattr(user, name, ldap_value)
                             user_updated = True
 
                     if user_updated:
-                        self.logger.debug(u"Updated user {0!s}/{1!s}".format(username, old_username))
+                        self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
                     self._ldapobject_update(user, attributes,
                                             old_username=old_username,
@@ -350,7 +353,7 @@ class UserSync(object):
             self.check_removed()
         finally:
             self.logger.set_synchronizing(False)
-            self.logger.info(u"Users are synchronized")
+            self.logger.info("Users are synchronized")
 
     def __enter__(self):
         self.before()
@@ -380,7 +383,7 @@ class UserSync(object):
                 for path in self.removed_user_callbacks:
                     callback = import_string(path)
                     callback(user)
-                    self.logger.debug(u"Called %s for user %s" % (path, user))
+                    self.logger.debug("Called %s for user %s" % (path, user))
 
 
 class Command(BaseCommand):
@@ -405,7 +408,7 @@ class Command(BaseCommand):
         """Retrieve user data from LDAP server."""
         user_filter = get_setting('LDAP_SYNC_USER_FILTER')
         if not user_filter:
-            self.logger.debug(u'LDAP_SYNC_USER_FILTER not configured, skipping user sync')
+            self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
             return []
 
         user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
@@ -441,10 +444,9 @@ class Command(BaseCommand):
             defaults = {}
             try:
                 for name, attribute in ldap_attributes.items():
-                    if isinstance(attribute[0], str):
-                        value = attribute[0].decode('utf-8')
-                    else:
-                        value = attribute[0]
+                    value = attribute[0]
+                    if isinstance(value, bytes):
+                        value = str(value, encoding=DEFAULT_ENCODING)
                     defaults[group_attributes[name]] = value
             except AttributeError:
                 # In some cases attrs is a list instead of a dict; skip these invalid groups

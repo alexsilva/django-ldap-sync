@@ -1,10 +1,11 @@
-import ctypes
-from StringIO import StringIO
-
 import re
+from io import StringIO
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
+
+DEFAULT_ENCODING = 'UTF-8'
 
 
 def get_setting(name, default=None, strict=False):

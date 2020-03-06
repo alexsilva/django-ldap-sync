@@ -51,7 +51,7 @@ class LdapSyncLogMeta(models.Model):
 
     def __unicode__(self):
         text = Truncator(self.text).chars(30, html=True)
-        return u"[{}] {}".format(logging.getLevelName(self.level), text)
+        return u"[{}] {}".format(logging.getLevelName(str(self.level)), text)
 
     class Meta:
         verbose_name = _("Log Info")
