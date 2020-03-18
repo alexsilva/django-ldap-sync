@@ -320,7 +320,7 @@ class UserSync(object):
                                             old_username=old_username,
                                             user_updated=True)
                 else:
-                    for name, ldap_value in defaults.iteritems():
+                    for name, ldap_value in defaults.items():
                         try:
                             user_value = getattr(user, name)
                         except AttributeError:
