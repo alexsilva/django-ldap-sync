@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import DataError
 from django.db import IntegrityError
+from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
 
 from ldap_sync.logger import Logger
@@ -185,7 +186,7 @@ class UserSync(object):
             content = field_values[field_name]
             field = getattr(user, field_name)
 
-            filename = self.imagefield_filename_prefix + hashlib.md5(str(user.pk)).hexdigest()
+            filename = self.imagefield_filename_prefix + hashlib.md5(force_bytes(user.pk)).hexdigest()
 
             if slugify is not None:
                 filename = slugify.slugify(filename)
