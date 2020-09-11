@@ -10,6 +10,7 @@ class LdapObject(models.Model):
     """Data information for a synchronized ldap object"""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
                                 verbose_name=_("User"))
     account_name = models.CharField(_("Account name"),
                                     max_length=256)
@@ -45,7 +46,8 @@ class LdapSyncLog(models.Model):
 
 
 class LdapSyncLogMeta(models.Model):
-    log = models.ForeignKey(LdapSyncLog)
+    log = models.ForeignKey(LdapSyncLog,
+                            on_delete=models.CASCADE)
     level = models.SmallIntegerField(_("Level"))
     text = models.TextField(_("Text"))
 
