@@ -132,16 +132,15 @@ class UserSync(object):
         """Operations before running synchronization"""
         self.logger.set_synchronizing(True)
 
-    def transform_imagefield(self, field_name, attributes):
+    def transform_imagefield(self, value):
         """Converts data from a binary image to BytesIO"""
-        content = attributes.pop(field_name)
-        if isinstance(content, text_types):
-            content = content.strip()
-        if content:
-            attributes[field_name] = ContentFile(content)
+        if isinstance(value, bytes):
+            value = value.strip()
+        if value:
+            value = ContentFile(value)
         else:
-            attributes[field_name] = None
-        return attributes[field_name]
+            value = None
+        return value
 
     @staticmethod
     def _file_hash(fp):
@@ -261,7 +260,7 @@ class UserSync(object):
                     try:
                         field_type = self.field_type_map.get(self.user_attributes[name])
                         if field_type is not None:
-                            value = getattr(self, "transform_" + field_type)(name, attributes)
+                            value = getattr(self, "transform_" + field_type)(value)
                     except KeyError:
                         pass
                     if isinstance(value, bytes):
