@@ -1,4 +1,5 @@
 # coding=utf-8
+from django.contrib.auth.backends import ModelBackend
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 
@@ -8,7 +9,7 @@ from ldap_sync.utils import get_setting
 __all__ = ['LdapBackend']
 
 
-class LdapBackend:
+class LdapBackend(ModelBackend):
 	"""
 	Backend that assists in authentication with ldap.
 	"""
@@ -26,7 +27,7 @@ class LdapBackend:
 		"""User after bind check"""
 		raise NotImplementedError
 
-	def authenticate(self, request, username=None, password=None):
+	def authenticate(self, request, username=None, password=None, **kwargs):
 		auth = get_setting('LDAP_SYNC_BASE_USER')
 		uri = get_setting('LDAP_SYNC_URI')
 
