@@ -27,10 +27,12 @@ class EncryptedCharField(models.CharField):
 		return base64.urlsafe_b64encode(key)
 
 	def encrypt(self, data):
-		return EncryptedData(self.fernet.encrypt(force_bytes(data)))
+		data = force_bytes(data)
+		data = self.fernet.encrypt(data)
+		return EncryptedData(data, 'ascii')
 
 	def decrypt(self, token):
-		return self.fernet.decrypt(token)
+		return self.fernet.decrypt(token.encode('ascii'))
 
 	def from_db_value(self, value, expression, connection):
 		"""Decrypt data from the database"""
