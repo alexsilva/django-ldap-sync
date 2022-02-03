@@ -3,7 +3,7 @@ import base64
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.db import models
-from django.utils.encoding import force_bytes
+from django.utils.encoding import force_bytes, force_str
 
 
 class EncryptedData(str):
@@ -39,6 +39,7 @@ class EncryptedCharField(models.CharField):
 		if value is None:
 			return value
 		value = self.decrypt(value)
+		value = force_str(value)
 		return value
 
 	def to_python(self, value):
