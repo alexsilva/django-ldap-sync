@@ -5,6 +5,27 @@ import logging
 
 from django.utils.text import Truncator
 
+try:
+    from ldap_sync.fields import EncryptedCharField
+except ImportError:
+    # If the dependency doesn't exist use a default charfield
+    EncryptedCharField = models.CharField
+
+
+class LdapAccount(models.Model):
+    """Model of LDAP account records"""
+    username = models.CharField(verbose_name=_("User"), max_length=256)
+    password = EncryptedCharField(verbose_name=_("Password"), max_length=350)
+    uri = models.CharField(verbose_name="Server URI", max_length=350)
+    options = models.TextField(verbose_name=_("Options"), blank=True)
+
+    class Meta:
+        verbose_name = "LDAP Account"
+        verbose_name_plural = verbose_name + "s"
+
+    def __str__(self):
+        return "{0.uri}@{0.username}".format(self)
+
 
 class LdapObject(models.Model):
     """Data information for a synchronized ldap object"""
