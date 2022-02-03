@@ -6,7 +6,7 @@ import logging
 from django.utils.text import Truncator
 
 try:
-    from ldap_sync.fields import EncryptedCharField
+    from ldap_sync.fields.encrypted import EncryptedCharField
 except ImportError:
     # If the dependency doesn't exist use a default charfield
     EncryptedCharField = models.CharField
