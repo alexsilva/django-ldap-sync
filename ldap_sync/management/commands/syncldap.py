@@ -237,9 +237,11 @@ class UserSync(object):
         """saves metadata from the synchronized user in the database"""
         attributes, _ = self._exclude_fields(attributes,
                                              names=self.field_types)
-        qs = LdapObject.objects.filter(user=user)
+        qs = LdapObject.objects.filter(account=self.account,
+                                       user=user)
         if not qs.exists():
             LdapObject.objects.create(
+                account=self.account,
                 user=user,
                 account_name=kwargs['old_username'],
                 data=json.dumps(attributes))
@@ -373,7 +375,7 @@ class UserSync(object):
     def check_removed(self):
         """Makes user removal not found on ldap db"""
         if self.removed_user_callbacks:
-            queryset = User.objects.all()
+            queryset = User.objects.filter(ldaobject__account=self.account)
 
             if self.removed_user_queryset_callbacks:
                 for path in self.removed_user_queryset_callbacks:
