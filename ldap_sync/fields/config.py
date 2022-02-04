@@ -37,7 +37,7 @@ class ConfigTextField(models.TextField):
 	def from_db_value(self, value, expression, connection):
 		if value is None:
 			return value
-		config = ConfigParserText()
+		config = ConfigParserText(allow_no_value=True)
 		config.read_string(value)
 		return config
 
@@ -55,7 +55,7 @@ class ConfigTextField(models.TextField):
 			return value
 		elif isinstance(value, configparser.ConfigParser):
 			return value
-		config = configparser.ConfigParser()
+		config = configparser.ConfigParser(allow_no_value=True)
 		try:
 			config.read_string(value)
 		except configparser.ParsingError as exc:
