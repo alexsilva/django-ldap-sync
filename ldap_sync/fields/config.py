@@ -44,6 +44,8 @@ class ConfigTextField(models.TextField):
 	def get_prep_value(self, value):
 		if value is None:
 			return value
+		elif isinstance(value, str):
+			return value
 
 		stream = io.StringIO()
 		value.write(stream)
