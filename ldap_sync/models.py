@@ -35,6 +35,9 @@ class LdapObject(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 verbose_name=_("User"))
+    account = models.ForeignKey(LdapAccount, verbose_name="Ldap Account",
+                                on_delete=models.CASCADE,
+                                null=True)
     account_name = models.CharField(_("Account name"),
                                     max_length=256)
     data = models.TextField(_("Data"), blank=True, null=True)
