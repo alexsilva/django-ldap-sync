@@ -4,8 +4,6 @@ import hashlib
 import json
 import mimetypes
 import traceback
-from io import StringIO
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
@@ -15,12 +13,12 @@ from django.db import DataError
 from django.db import IntegrityError
 from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
-
+from io import StringIO
 from ldap_sync.logger import Logger
-from ldap_sync.models import LdapObject
+from ldap_sync.models import LdapObject, LdapAccount
 from ldap_sync.service import LdapSearch
-from ldap_sync.utils import get_setting
 from ldap_sync.utils import DEFAULT_ENCODING
+from ldap_sync.utils import get_setting
 
 try:
     import slugify
@@ -57,11 +55,8 @@ class UserSync(object):
     """
     Intermediate layer of synchronization
     """
-    user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES')
     user_attrvalue_encoding = get_setting('LDAP_SYNC_USER_ATTRVALUE_ENCODING',
                                           default=DEFAULT_ENCODING)
-    user_attributes_defaults = get_setting('LDAP_SYNC_USER_ATTRIBUTES_DEFAULTS',
-                                           default={})
     user_default_callback = get_setting('LDAP_SYNC_USER_DEFAULT_CALLBACK',
                                         default=None)
     removed_user_queryset_callbacks = get_setting('LDAP_SYNC_REMOVED_USER_QUERYSET_CALLBACKS',
@@ -70,14 +65,13 @@ class UserSync(object):
     username_field = (get_setting('LDAP_SYNC_USERNAME_FIELD') or getattr(User, 'USERNAME_FIELD', 'username'))
     user_callbacks = list(get_setting('LDAP_SYNC_USER_CALLBACKS', default=[]))
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
-    imagefield_default_ext = get_setting('LDAP_SYNC_IMAGEFIELD_DEFAULT_EXT', default=None)
-
     imagefield_filename_prefix = "ldap-image-"
 
     class InvalidImage(Exception):
         """An exception that occurs when the image is invalid"""
+        pass
 
-    def __init__(self, command):
+    def __init__(self, command, **options):
         """
         Initializing method
         :param command: Django command
@@ -85,8 +79,17 @@ class UserSync(object):
         self.command = command
         self.pks = set()
         self.counter = 0
+
+        self.options = options
+
+        # config
+        self.user_attributes = copy.deepcopy(options['user_attributes'])
+        self.user_attributes_defaults = options.get("user_attributes_defaults", {})
+        self.imagefield_default_ext = options.get('imagefield_default_ext')
+
+        # validation
         self._validate_username_field()
-        self.user_attributes = copy.deepcopy(self.user_attributes)
+
         self.field_types = ('imagefield',)
         self.field_type_map = self._get_field_types()
         self.field_types_names = set(self.field_type_map.values())
@@ -390,34 +393,66 @@ class UserSync(object):
 class Command(BaseCommand):
     can_import_settings = True
     help = 'Synchronize users and groups from an authoritative LDAP server'
+    ldap_account_model = LdapAccount
 
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
         self.logger = Logger()
 
     @ContextLogger()
-    def handle(self, *args, **options):
+    def handle_group_sync(self, account, **extra_options):
         ldap_groups = self.get_ldap_groups()
         if ldap_groups:
             self.search_groups(ldap_groups)
 
-        with UserSync(self) as usync:
-            for users in self.search_users():
-                usync.execute(users)
+    @ContextLogger()
+    def handle_user_sync(self, account, **extra_options):
+        config = account.options
+        options = dict(
+            uri=account.uri,
+            username=account.username,
+            password=account.password,
+            user_filter=config.get('sync', 'user_filter', fallback=None),
+            user_base_dn=config.get('sync', 'user_base_dn', fallback=None),
+            user_attributes=dict(config.items('user_attributes')),
+            user_attributes_defaults=dict(config.items('user_attributes_defaults')),
+            imagefield_default_ext=config.get('sync', 'imagefield_default_ext', fallback=None),
+        )
+        options['user_extra_attributes'] = (config.options('user_extra_attributes') if
+                                            config.has_section('user_extra_attributes') else [])
+        with UserSync(self, **options) as usersync:
+            for users in self.search_users(**options):
+                usersync.execute(users)
+        return account
 
-    def search_users(self):
+    def handle(self, *args, **options):
+        for account in self.ldap_account_model.objects.all():
+            self.handle_group_sync(account)
+            self.handle_user_sync(account)
+
+    def search_users(self, **options):
         """Retrieve user data from LDAP server."""
-        user_filter = get_setting('LDAP_SYNC_USER_FILTER')
+        user_filter = options.get('user_filter')
         if not user_filter:
-            self.logger.debug('LDAP_SYNC_USER_FILTER not configured, skipping user sync')
+            self.logger.debug('"user_filter" not configured, skipping user sync')
             return []
 
-        user_attributes = get_setting('LDAP_SYNC_USER_ATTRIBUTES', strict=True)
-        user_keys = set(user_attributes.keys())
-        user_extra_attributes = get_setting('LDAP_SYNC_USER_EXTRA_ATTRIBUTES', default=[])
-        user_keys.update(user_extra_attributes)
+        user_base_dn = options.get('user_base_dn')
+        if not user_base_dn:
+            self.logger.debug('"user_base_dn" not configured, skipping user sync')
+            return []
 
-        return self.ldap_search("users", user_filter, user_keys)
+        user_attributes = options['user_attributes']
+        user_extra_attributes = options.get('user_extra_attributes')
+
+        attributes = set(user_attributes.keys())
+        if user_extra_attributes:
+            attributes.update(user_extra_attributes)
+
+        search = self.get_connection(**options)
+
+        # query the configured LDAP server with the provided search filter and attribute list.
+        return search.users(user_base_dn, user_filter, user_attributes)
 
     def get_ldap_groups(self):
         """Retrieve groups from LDAP server."""
@@ -474,21 +509,14 @@ class Command(BaseCommand):
 
         self.logger.info("Groups are synchronized")
 
-    def ldap_search(self, sname, sfilter, attributes):
+    def get_connection(self, **options) -> LdapSearch:
         """
-        Query the configured LDAP server with the provided search filter and
-        attribute list.
+        Connection object
         """
-        uri = get_setting('LDAP_SYNC_URI', strict=True)
-        username = get_setting('LDAP_SYNC_BASE_USER', strict=True)
-        password = get_setting('LDAP_SYNC_BASE_PASS', strict=True)
-        base_dn = get_setting('LDAP_SYNC_BASE', strict=True)
-
         # ldap config
-        ldap_search = LdapSearch(uri)
+        search = LdapSearch(options['uri'])
 
         # ldap authentication
-        ldap_search.login(username, password)
-
-        # ldap search
-        return getattr(ldap_search, sname)(base_dn, sfilter, attributes)
+        search.login(options['username'],
+                     options['password'])
+        return search
