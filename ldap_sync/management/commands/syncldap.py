@@ -416,7 +416,9 @@ class Command(BaseCommand):
             user_base_dn=config.get('sync', 'user_base_dn', fallback=None),
             user_attributes=dict(config.items('user_attributes')),
             user_attributes_defaults=dict(config.items('user_attributes_defaults')),
-            imagefield_default_ext=config.get('sync', 'imagefield_default_ext', fallback=None),
+            imagefield_default_ext=config.get('sync', 'imagefield_default_ext',
+                                              fallback=get_setting('LDAP_SYNC_IMAGEFIELD_DEFAULT_EXT',
+                                                                   default=None)),
         )
         options['user_extra_attributes'] = (config.options('user_extra_attributes') if
                                             config.has_section('user_extra_attributes') else [])
