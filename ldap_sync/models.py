@@ -14,7 +14,8 @@ except ImportError:
 
 class LdapAccount(models.Model):
     """Model of LDAP account records"""
-    username = models.CharField(verbose_name=_("User"), max_length=256)
+    username = models.CharField(verbose_name=_("User"), max_length=256,
+                                help_text=_("domain inclusion required 'domain\\username'"))
     password = EncryptedCharField(verbose_name=_("Password"), max_length=350)
     uri = models.CharField(verbose_name="Server URI", max_length=350)
     options = ConfigTextField(verbose_name=_("Options"), blank=True,
