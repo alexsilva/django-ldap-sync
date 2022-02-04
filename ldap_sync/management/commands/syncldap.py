@@ -71,12 +71,13 @@ class UserSync(object):
         """An exception that occurs when the image is invalid"""
         pass
 
-    def __init__(self, command, **options):
+    def __init__(self, command, account, **options):
         """
         Initializing method
         :param command: Django command
         """
         self.command = command
+        self.account = account
         self.pks = set()
         self.counter = 0
 
@@ -409,9 +410,6 @@ class Command(BaseCommand):
     def handle_user_sync(self, account, **extra_options):
         config = account.options
         options = dict(
-            uri=account.uri,
-            username=account.username,
-            password=account.password,
             user_filter=config.get('sync', 'user_filter', fallback=None),
             user_base_dn=config.get('sync', 'user_base_dn', fallback=None),
             user_attributes=dict(config.items('user_attributes')),
@@ -420,8 +418,8 @@ class Command(BaseCommand):
         )
         options['user_extra_attributes'] = (config.options('user_extra_attributes') if
                                             config.has_section('user_extra_attributes') else [])
-        with UserSync(self, **options) as usersync:
-            for users in self.search_users(**options):
+        with UserSync(self, account, **options) as usersync:
+            for users in self.search_users(account, **options):
                 usersync.execute(users)
         return account
 
@@ -430,7 +428,7 @@ class Command(BaseCommand):
             self.handle_group_sync(account)
             self.handle_user_sync(account)
 
-    def search_users(self, **options):
+    def search_users(self, account, **options):
         """Retrieve user data from LDAP server."""
         user_filter = options.get('user_filter')
         if not user_filter:
@@ -449,7 +447,7 @@ class Command(BaseCommand):
         if user_extra_attributes:
             attributes.update(user_extra_attributes)
 
-        search = self.get_connection(**options)
+        search = self.get_connection(account)
 
         # query the configured LDAP server with the provided search filter and attribute list.
         return search.users(user_base_dn, user_filter, user_attributes)
@@ -509,14 +507,14 @@ class Command(BaseCommand):
 
         self.logger.info("Groups are synchronized")
 
-    def get_connection(self, **options) -> LdapSearch:
+    def get_connection(self, account) -> LdapSearch:
         """
         Connection object
         """
         # ldap config
-        search = LdapSearch(options['uri'])
+        search = LdapSearch(account.uri)
 
         # ldap authentication
-        search.login(options['username'],
-                     options['password'])
+        search.login(account.username,
+                     account.password)
         return search
