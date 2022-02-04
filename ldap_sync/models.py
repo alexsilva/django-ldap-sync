@@ -22,8 +22,8 @@ class LdapAccount(models.Model):
                                         'user_attributes_defaults'])
 
     class Meta:
-        verbose_name = "LDAP Account"
-        verbose_name_plural = verbose_name + "s"
+        verbose_name = _("LDAP Account")
+        verbose_name_plural = _("LDAP Accounts")
 
     def __str__(self):
         return "{0.uri}@{0.username}".format(self)
@@ -35,7 +35,7 @@ class LdapObject(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 verbose_name=_("User"))
-    account = models.ForeignKey(LdapAccount, verbose_name="Ldap Account",
+    account = models.ForeignKey(LdapAccount, verbose_name=_("LDAP Account"),
                                 on_delete=models.CASCADE,
                                 null=True)
     account_name = models.CharField(_("Account name"),
