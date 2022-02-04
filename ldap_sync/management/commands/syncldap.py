@@ -127,7 +127,7 @@ class UserSync(object):
             raise ImproperlyConfigured("Field '%s' must be unique" % self.username_field)
 
         if self.username_field not in self.user_attributes.values():
-            raise ImproperlyConfigured("LDAP_SYNC_USER_ATTRIBUTES must contain the field '%s'" % self.username_field)
+            raise ImproperlyConfigured("'user_attributes' must contain the field '%s'" % self.username_field)
 
     def __getattr__(self, item):
         return getattr(self.command, item)
