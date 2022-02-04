@@ -50,9 +50,13 @@ class ConfigTextField(models.TextField):
 			return value
 		elif isinstance(value, configparser.ConfigParser):
 			return value
+		config = configparser.ConfigParser()
 		try:
-			config = configparser.ConfigParser()
 			config.read_string(value)
 		except configparser.ParsingError as exc:
 			raise ValidationError(exc)
+		if self.sections is not None:
+			sections = config.sections()
+			if [s for s in self.sections if s in sections] != self.sections:
+				raise ValidationError("missing sections %(sections)s" % {'sections': self.sections})
 		return config
