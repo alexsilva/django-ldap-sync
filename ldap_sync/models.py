@@ -19,7 +19,7 @@ class LdapAccount(models.Model):
     uri = models.CharField(verbose_name="Server URI", max_length=350)
     options = ConfigTextField(verbose_name=_("Options"), blank=True,
                               sections=['sync', 'user_attributes',
-                                        'user_atributes_defaults'])
+                                        'user_attributes_defaults'])
 
     class Meta:
         verbose_name = "LDAP Account"
