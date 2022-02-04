@@ -1,9 +1,9 @@
-from django.db import models
-from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
 import logging
-
+from django.conf import settings
+from django.db import models
 from django.utils.text import Truncator
+from django.utils.translation import ugettext_lazy as _
+from ldap_sync.fields.config import ConfigTextField
 
 try:
     from ldap_sync.fields.encrypted import EncryptedCharField
@@ -17,7 +17,7 @@ class LdapAccount(models.Model):
     username = models.CharField(verbose_name=_("User"), max_length=256)
     password = EncryptedCharField(verbose_name=_("Password"), max_length=350)
     uri = models.CharField(verbose_name="Server URI", max_length=350)
-    options = models.TextField(verbose_name=_("Options"), blank=True)
+    options = ConfigTextField(verbose_name=_("Options"), blank=True)
 
     class Meta:
         verbose_name = "LDAP Account"
