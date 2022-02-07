@@ -375,7 +375,7 @@ class UserSync(object):
     def check_removed(self):
         """Makes user removal not found on ldap db"""
         if self.removed_user_callbacks:
-            queryset = User.objects.filter(ldapobject__account=self.account)
+            queryset = LdapObject.objects.filter(account=self.account)
 
             if self.removed_user_queryset_callbacks:
                 for path in self.removed_user_queryset_callbacks:
