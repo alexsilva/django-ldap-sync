@@ -451,7 +451,7 @@ class Command(BaseCommand):
         search = self.get_connection(account)
 
         # query the configured LDAP server with the provided search filter and attribute list.
-        return search.users(user_base_dn, user_filter, user_attributes)
+        return search.users(user_base_dn, user_filter, attributes)
 
     def get_connection(self, account) -> LdapSearch:
         """
