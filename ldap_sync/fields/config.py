@@ -70,7 +70,7 @@ class ConfigTextField(models.TextField):
 		config = self.get_config_parser()
 		try:
 			config.read_string(value)
-		except configparser.ParsingError as exc:
+		except configparser.Error as exc:
 			raise ValidationError(exc)
 		if self.sections is not None:
 			sections = config.sections()
