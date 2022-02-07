@@ -1,6 +1,7 @@
 import logging
 from django.conf import settings
 from django.db import models
+from django.utils.formats import date_format
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from ldap_sync.fields.config import ConfigTextField
@@ -71,7 +72,8 @@ class LdapSyncLog(models.Model):
     total = models.IntegerField(_("Total"), default=0)
 
     def __str__(self):
-        return "{0.status}/{0.total}".format(self)
+        dt = date_format(self.created)
+        return "Log {0} :: Status({1.status}/{1.total})".format(dt, self)
 
     class Meta:
         verbose_name = _("Log")
