@@ -7,11 +7,15 @@ from django.db import models
 
 class ConfigParserText(configparser.ConfigParser):
 	"""Show config as text"""
+	optionxform = str
 
-	def __str__(self):
+	def to_text(self):
 		stream = io.StringIO()
 		self.write(stream)
 		return stream.getvalue()
+
+	def __str__(self):
+		return self.to_text()
 
 
 class ConfigTextField(models.TextField):
@@ -34,10 +38,14 @@ class ConfigTextField(models.TextField):
 		value = self.value_from_object(obj)
 		return self.get_prep_value(value)
 
+	@staticmethod
+	def get_config_parser():
+		return ConfigParserText(allow_no_value=True)
+
 	def from_db_value(self, value, expression, connection):
 		if value is None:
 			return value
-		config = ConfigParserText(allow_no_value=True)
+		config = self.get_config_parser()
 		config.read_string(value)
 		return config
 
@@ -57,7 +65,7 @@ class ConfigTextField(models.TextField):
 			return value
 		elif isinstance(value, configparser.ConfigParser):
 			return value
-		config = configparser.ConfigParser(allow_no_value=True)
+		config = self.get_config_parser()
 		try:
 			config.read_string(value)
 		except configparser.ParsingError as exc:
