@@ -32,13 +32,14 @@ class LdapAccount(models.Model):
 
 class LdapObject(models.Model):
     """Data information for a synchronized ldap object"""
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL,
-                                on_delete=models.CASCADE,
-                                verbose_name=_("User"))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE,
+                             verbose_name=_("User"))
     account = models.ForeignKey(LdapAccount, verbose_name=_("LDAP Account"),
                                 on_delete=models.CASCADE,
                                 null=True)
+    is_active = models.BooleanField(verbose_name=_("Is active"),
+                                    default=True)
     account_name = models.CharField(_("Account name"),
                                     max_length=256)
     data = models.TextField(_("Data"), blank=True, null=True)
