@@ -308,8 +308,7 @@ class UserSync(object):
                 callback = import_string(self.user_default_callback)
                 kwargs['defaults'].update(callback(**kwargs['defaults']))
 
-            defaults, db_field_values = self._exclude_fields(
-                defaults, names=self.field_types)
+            defaults, db_field_values = self._exclude_fields(defaults, names=self.field_types)
             user_updated = False
             try:
                 user, created = User.objects.get_or_create(**kwargs)
