@@ -1,3 +1,5 @@
+# coding=utf-8
+
 def user_active_directory_enabled(user, attributes, created, updated):
     """
     Activate/deactivate user accounts based on Active Directory's
