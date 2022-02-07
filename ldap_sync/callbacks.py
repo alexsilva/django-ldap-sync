@@ -20,8 +20,9 @@ def removed_user_deactivate(user, account):
     source LDAP server.
     """
     if user.is_active:
-        user.ldapobject.filter(account=account).update(is_active=False)
-        user.is_active = user.ldapobject.filter(is_active=True).exists()
+        qs = user.ldapobject_set.all()
+        qs.filter(account=account).update(is_active=False)
+        user.is_active = qs.filter(is_active=True).exists()
         user.save()
 
 
