@@ -1,6 +1,6 @@
 # coding=utf-8
 
-def user_active_directory_enabled(user, attributes, created, updated):
+def user_active_directory_enabled(user, account, attributes, **kwargs):
     """
     Activate/deactivate user accounts based on Active Directory's
     userAccountControl flags. Requires 'userAccountControl'
@@ -14,6 +14,8 @@ def user_active_directory_enabled(user, attributes, created, updated):
         else:
             updated = not user.is_active
             user.is_active = True
+        if updated:
+            user.ldapobject_set.update(is_active=user.is_active)
         return updated  # updated
     except (KeyError, ValueError):
         pass

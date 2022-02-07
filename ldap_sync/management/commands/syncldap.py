@@ -248,12 +248,8 @@ class UserSync(object):
         elif kwargs['user_updated']:
             qs.update(
                 account_name=kwargs['old_username'],
-                data=json.dumps(attributes),
-                is_active=True
+                data=json.dumps(attributes)
             )
-        else:
-            # reactivates a deactivated profile.
-            qs.update(is_active=True)
 
     def execute(self, items):
         """ Synchronize a set of users """
@@ -349,7 +345,9 @@ class UserSync(object):
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
-                    user_updated = callback(user, attributes, created, user_updated) or user_updated
+                    user_updated = (callback(user, self.account, attributes,
+                                            created=created, updated=user_updated) or
+                                    user_updated)
 
                 if user_updated:
                     user.save()
