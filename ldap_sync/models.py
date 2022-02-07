@@ -17,14 +17,19 @@ class LdapAccount(models.Model):
     username = models.CharField(verbose_name=_("User"), max_length=256,
                                 help_text=_("domain inclusion required 'domain\\username'"))
     password = EncryptedCharField(verbose_name=_("Password"), max_length=350)
-    uri = models.CharField(verbose_name="Server URI", max_length=350)
+    uri = models.CharField(verbose_name=_("Server URI"), max_length=350)
+    domain = models.CharField(verbose_name=_("Domain of ldap users"),
+                              max_length=128,
+                              null=True)
     options = ConfigTextField(verbose_name=_("Options"), blank=True,
                               sections=['sync', 'user_attributes',
                                         'user_attributes_defaults'])
+    order = models.IntegerField(verbose_name=_("Order"), default=0)
 
     class Meta:
         verbose_name = _("LDAP Account")
         verbose_name_plural = _("LDAP Accounts")
+        ordering = ("order",)
 
     def __str__(self):
         return "{0.uri}@{0.username}".format(self)
