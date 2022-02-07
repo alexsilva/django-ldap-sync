@@ -407,12 +407,6 @@ class Command(BaseCommand):
         self.logger = Logger()
 
     @ContextLogger()
-    def handle_group_sync(self, account, **extra_options):
-        ldap_groups = self.get_ldap_groups()
-        if ldap_groups:
-            self.search_groups(ldap_groups)
-
-    @ContextLogger()
     def handle_user_sync(self, account, **extra_options):
         config = account.options
         options = dict(
@@ -433,7 +427,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for account in self.ldap_account_model.objects.all():
-            self.handle_group_sync(account)
             self.handle_user_sync(account)
 
     def search_users(self, account, **options):
@@ -459,61 +452,6 @@ class Command(BaseCommand):
 
         # query the configured LDAP server with the provided search filter and attribute list.
         return search.users(user_base_dn, user_filter, user_attributes)
-
-    def get_ldap_groups(self):
-        """Retrieve groups from LDAP server."""
-        group_filter = get_setting('LDAP_SYNC_GROUP_FILTER')
-        if not group_filter:
-            self.logger.debug('LDAP_SYNC_GROUP_FILTER not configured, skipping group sync')
-            return []
-
-        group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES', strict=True)
-
-        groups = self.ldap_search("groups", group_filter, group_attributes.keys())
-        self.logger.debug("Retrieved %d groups" % len(groups))
-        return groups
-
-    def search_groups(self, ldap_groups):
-        """Synchronize LDAP groups with local group model."""
-        group_attributes = get_setting('LDAP_SYNC_GROUP_ATTRIBUTES')
-        groupname_field = 'name'
-
-        if groupname_field not in group_attributes.values():
-            error_msg = "LDAP_SYNC_GROUP_ATTRIBUTES must contain the field '%s'" % groupname_field
-            raise ImproperlyConfigured(error_msg)
-
-        for cname, ldap_attributes in ldap_groups:
-            defaults = {}
-            try:
-                for name, attribute in ldap_attributes.items():
-                    value = attribute[0]
-                    if isinstance(value, bytes):
-                        value = str(value, encoding=DEFAULT_ENCODING)
-                    defaults[group_attributes[name]] = value
-            except AttributeError:
-                # In some cases attrs is a list instead of a dict; skip these invalid groups
-                continue
-
-            try:
-                groupname = defaults[groupname_field]
-            except KeyError:
-                self.logger.warning("Group is missing a required attribute '%s'" % groupname_field)
-                continue
-
-            kwargs = {
-                groupname_field + '__iexact': groupname,
-                'defaults': defaults,
-            }
-
-            try:
-                group, created = Group.objects.get_or_create(**kwargs)
-            except (IntegrityError, DataError) as e:
-                self.logger.error("Error creating group %s: %s" % (groupname, e))
-            else:
-                if created:
-                    self.logger.debug("Created group %s" % groupname)
-
-        self.logger.info("Groups are synchronized")
 
     def get_connection(self, account) -> LdapSearch:
         """
