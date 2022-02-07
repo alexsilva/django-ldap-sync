@@ -7,7 +7,9 @@ from django.db import models
 
 class ConfigParserText(configparser.ConfigParser):
 	"""Show config as text"""
-	optionxform = str
+
+	def optionxform(self, optionstr):
+		return optionstr
 
 	def to_text(self):
 		stream = io.StringIO()
