@@ -9,10 +9,12 @@ def user_active_directory_enabled(user, attributes, created, updated):
     try:
         user_account_control = int(attributes['userAccountControl'])
         if user_account_control & 2:
+            updated = user.is_active
             user.is_active = False
         else:
+            updated = not user.is_active
             user.is_active = True
-        return True  # updated
+        return updated  # updated
     except (KeyError, ValueError):
         pass
 
