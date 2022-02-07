@@ -7,12 +7,13 @@ def user_active_directory_enabled(user, attributes, created, updated):
     to be included in LDAP_SYNC_USER_EXTRA_ATTRIBUTES.
     """
     try:
-        user_account_control = int(attributes['userAccountControl'][0])
+        user_account_control = int(attributes['userAccountControl'])
         if user_account_control & 2:
             user.is_active = False
         else:
             user.is_active = True
-    except KeyError:
+        return True  # updated
+    except (KeyError, ValueError):
         pass
 
 

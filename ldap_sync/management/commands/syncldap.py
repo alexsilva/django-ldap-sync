@@ -349,7 +349,7 @@ class UserSync(object):
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
-                    callback(user, attributes, created, user_updated)
+                    user_updated = callback(user, attributes, created, user_updated) or user_updated
 
                 if user_updated:
                     user.save()
