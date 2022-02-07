@@ -248,8 +248,12 @@ class UserSync(object):
         elif kwargs['user_updated']:
             qs.update(
                 account_name=kwargs['old_username'],
-                data=json.dumps(attributes)
+                data=json.dumps(attributes),
+                is_active=True
             )
+        else:
+            # reactivates a deactivated profile.
+            qs.update(is_active=True, update_fields=('is_active',))
 
     def execute(self, items):
         """ Synchronize a set of users """
