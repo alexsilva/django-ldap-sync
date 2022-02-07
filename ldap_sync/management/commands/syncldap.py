@@ -406,6 +406,10 @@ class Command(BaseCommand):
         super(Command, self).__init__(*args, **kwargs)
         self.logger = Logger()
 
+    def handle(self, *args, **options):
+        for account in self.ldap_account_model.objects.all():
+            self.handle_user_sync(account)
+
     @ContextLogger()
     def handle_user_sync(self, account, **extra_options):
         config = account.options
@@ -424,10 +428,6 @@ class Command(BaseCommand):
             for users in self.search_users(account, **options):
                 usersync.execute(users)
         return account
-
-    def handle(self, *args, **options):
-        for account in self.ldap_account_model.objects.all():
-            self.handle_user_sync(account)
 
     def search_users(self, account, **options):
         """Retrieve user data from LDAP server."""
