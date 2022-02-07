@@ -375,12 +375,12 @@ class UserSync(object):
     def check_removed(self):
         """Makes user removal not found on ldap db"""
         if self.removed_user_callbacks:
-            queryset = LdapObject.objects.filter(account=self.account)
+            queryset = User.objects.filter(ldapobject__account=self.account)
 
             if self.removed_user_queryset_callbacks:
                 for path in self.removed_user_queryset_callbacks:
                     callback = import_string(path)
-                    queryset = callback(queryset)
+                    queryset = callback(queryset, self.account)
 
             # Consider only current user set, because of pagination
             django_pks = set(queryset.values_list("pk", flat=True))
@@ -389,7 +389,7 @@ class UserSync(object):
                 user = User.objects.get(pk=user_pk)
                 for path in self.removed_user_callbacks:
                     callback = import_string(path)
-                    callback(user)
+                    callback(user, self.account)
                     self.logger.debug("Called %s for user %s" % (path, user))
 
 

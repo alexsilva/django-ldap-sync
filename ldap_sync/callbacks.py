@@ -14,19 +14,21 @@ def user_active_directory_enabled(user, attributes, created, updated):
         pass
 
 
-def removed_user_deactivate(user):
+def removed_user_deactivate(user, account):
     """
     Deactivate user accounts that no longer appear in the
     source LDAP server.
     """
     if user.is_active:
-        user.is_active = False
+        user.ldapobject.filter(account=account).update(is_active=False)
+        user.is_active = user.ldapobject.filter(is_active=True).exists()
         user.save()
 
 
-def removed_user_delete(user):
+def removed_user_delete(user, account):
     """
     Delete user accounts that no longer appear in the
     source LDAP server.
     """
+    # ldapobject is removed together with the user.
     user.delete()
