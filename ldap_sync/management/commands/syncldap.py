@@ -253,7 +253,7 @@ class UserSync(object):
             )
         else:
             # reactivates a deactivated profile.
-            qs.update(is_active=True, update_fields=('is_active',))
+            qs.update(is_active=True)
 
     def execute(self, items):
         """ Synchronize a set of users """
