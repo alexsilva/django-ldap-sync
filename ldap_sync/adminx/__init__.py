@@ -77,6 +77,11 @@ class LdapAccountAdmin(object):
 		'order',
 		'options'
 	)
+
+	list_display = (
+		'__str__',
+		'order'
+	)
 	formfield_overrides = {
 		EncryptedCharField: {
 			'widget': django_forms.PasswordInput(render_value=True),
