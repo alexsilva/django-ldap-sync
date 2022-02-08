@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-08 15:35-0300\n"
+"POT-Creation-Date: 2022-02-08 17:28-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,6 +25,11 @@ msgstr "Nível"
 #: ldap_sync/apps.py:7
 msgid "Ldap sync"
 msgstr "Sincronização do Ldap"
+
+#: ldap_sync/fields/config.py:79
+#, python-format
+msgid "missing sections %(sections)s"
+msgstr "faltando seções %(sections)s"
 
 #: ldap_sync/models.py:18 ldap_sync/models.py:43
 msgid "User"
