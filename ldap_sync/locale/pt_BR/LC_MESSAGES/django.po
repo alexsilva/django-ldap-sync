@@ -44,7 +44,7 @@ msgstr "URI do servidor"
 
 #: ldap_sync/models.py:22
 msgid "User domain"
-msgstr "Total de usuários"
+msgstr "Domínio do usuário"
 
 #: ldap_sync/models.py:25
 msgid "Options"
