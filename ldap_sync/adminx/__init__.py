@@ -1,8 +1,17 @@
+# coding=utf-8
+import django.db.models as django_models
+import django.forms as django_forms
 import logging
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from ldap_sync.adminx.forms import LdapAccountForm
+from ldap_sync.adminx.plugins import LdapUserMigrationPlugin
+from ldap_sync.adminx.views import LdapUserMigrationView
+from ldap_sync.fields.encrypted import EncryptedCharField
+from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
-from xadmin import site
+from xadmin import site, sites
+from xadmin.views import ModelFormAdminView
 
 User = get_user_model()
 
@@ -54,6 +63,31 @@ class LdapObjectAdmin(object):
 		"account_name"
 	)
 
+
+@sites.register(LdapAccount)
+class LdapAccountAdmin(object):
+	form = LdapAccountForm
+	fields = (
+		'username',
+		'password',
+		'uri',
+		'domain',
+		'order',
+		'options'
+	)
+	formfield_overrides = {
+		EncryptedCharField: {
+			'widget': django_forms.PasswordInput(render_value=True),
+			'strip': False
+		},
+		django_models.TextField: {
+			'widget': django_forms.Textarea(attrs={'rows': 25}),
+		}
+	}
+
+
+site.register_plugin(LdapUserMigrationPlugin, ModelFormAdminView)
+site.register_view(r"^ldap-migration/(\d+)", LdapUserMigrationView, "ldap_migration")
 
 site.register(LdapObject, LdapObjectAdmin)
 site.register(LdapSyncLog, LdapSearchAdmin)
