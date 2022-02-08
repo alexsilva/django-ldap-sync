@@ -28,7 +28,8 @@ class LdapUserMigrationView(BaseAdminView):
 			queryset = callback(queryset)
 
 		queryset = queryset.filter(ldapobject__account__isnull=True)
-		queryset.update(ldapobject__account=account)
+		for user in queryset:
+			user.ldapobject_set.update(account=account)
 
 		return JsonResponse({
 			'total': queryset.count()
