@@ -2,7 +2,10 @@
 import inspect
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
+from django.utils.functional import cached_property
+from django.utils.module_loading import import_string
 from ldap_sync.models import LdapAccount
+from ldap_sync.utils import get_setting
 from xadmin.plugins.utils import get_context_dict
 from xadmin.views.base import BaseAdminPlugin
 
@@ -15,7 +18,19 @@ class LdapUserMigrationPlugin(BaseAdminPlugin):
 
 	def init_request(self, *args, **kwargs):
 		model = getattr(self, 'model', None)
-		return inspect.isclass(model) and issubclass(model, LdapAccount) and len(args) > 0
+		return bool(inspect.isclass(model) and
+		            issubclass(model, LdapAccount) and
+		            len(args) > 0 and
+		            self.user_queryset.exists())
+
+	@cached_property
+	def user_queryset(self):
+		queryset = User.objects.filter(ldapobject__isnull=False)
+		user_queryset_callbacks = get_setting('LDAP_SYNC_USER_QUERYSET_CALLBACKS', default=[])
+		for callback in user_queryset_callbacks:
+			callback = import_string(callback)
+			queryset = callback(queryset)
+		return queryset.filter(ldapobject__account__isnull=True)
 
 	def block_nav_btns(self, context, nodes):
 		context = get_context_dict(context)
