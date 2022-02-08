@@ -60,7 +60,8 @@ class LdapObjectAdmin(object):
 	)
 	list_display = (
 		"user",
-		"account_name"
+		"account_name",
+		"account"
 	)
 
 
