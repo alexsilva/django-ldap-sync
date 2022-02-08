@@ -18,20 +18,32 @@
                 beforeSend: function (xhr, settings) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                     $btn.find("span")
+                        .removeClass("fa fa-times-circle text-error")
                         .removeClass("fa fa-check-circle text-success")
                         .addClass("fa-spinner fa fa-spin fa-large");
                     $btn.prop("disabled", true);
                 }
             }).done(function (data) {
-                console.log(data)
+                if (data && data.total === 0) {
+                    setTimeout(function () {
+                        $btn.find("span")
+                            .removeClass("fa-spinner fa fa-spin fa-large")
+                            .removeClass("fa fa-check-circle text-success")
+                            .addClass("fa fa-times-circle text-error");
+                        $btn.prop("disabled", false);
+                    }, 2000);
+                }
 
-            }).always(function (){
-                setTimeout(function (){
-                    $btn.find("span")
-                        .removeClass("fa-spinner fa fa-spin fa-large")
-                        .addClass("fa fa-check-circle text-success");
-                    $btn.prop("disabled", false);
-                }, 2000);
+            }).always(function (data){
+                if (data && data.total > 0) {
+                    setTimeout(function () {
+                        $btn.find("span")
+                            .removeClass("fa-spinner fa fa-spin fa-large")
+                            .removeClass("fa fa-times-circle text-error")
+                            .addClass("fa fa-check-circle text-success");
+                        $btn.prop("disabled", false);
+                    }, 2000);
+                }
             });
         });
     });
