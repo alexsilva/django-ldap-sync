@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from ldap_sync.models import LdapAccount
-from plus_base.publique.ldap import users as ldap_users
+from ldap_sync.utils import get_setting
 from xadmin.views.base import BaseAdminView
 
 User = get_user_model()
@@ -20,7 +20,11 @@ class LdapUserMigrationView(BaseAdminView):
 		pk = self.account_model._meta.pk.to_python(account_id)
 		account = self.account_model.objects.get(pk=pk)
 
-		queryset = ldap_users.qs_filter(User.objects.all())
+		queryset = User.objects.all()
+		user_queryset_callbacks = get_setting('LDAP_SYNC_USER_QUERYSET_CALLBACKS', default=[])
+		for callback in user_queryset_callbacks:
+			queryset = callback(queryset)
+
 		queryset = queryset.filter(ldapobject__account__isnull=True)
 		queryset.update(account=account)
 

@@ -20,5 +20,4 @@ class LdapUserMigrationPlugin(BaseAdminPlugin):
 	def block_nav_btns(self, context, nodes):
 		context = get_context_dict(context)
 		context['ldap_migration_url'] = self.get_admin_url("ldap_migration", self.admin_view.org_obj.pk)
-		# context['ldap_user_queryset'] = ldap_users.qs_filter(User.objects.all())
 		nodes.append(render_to_string("ldap_sync/user_migration.html", context=context))
