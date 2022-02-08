@@ -1,4 +1,4 @@
-<button type="button" class="btn btn-primary" id="btn-ldap-migration" title="Migra o usuários sem conta para esta">
+<button type="button" class="btn btn-secondary" id="btn-ldap-migration" title="Migra o usuários sem conta para esta">
     <span class=""></span>
     Migração de usuários
 </button>
@@ -17,15 +17,19 @@
                 method: 'post',
                 beforeSend: function (xhr, settings) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    $btn.find("span").addClass("fa-spinner fa fa-spin fa-large");
+                    $btn.find("span")
+                        .removeClass("fa fa-check-circle text-success")
+                        .addClass("fa-spinner fa fa-spin fa-large");
                     $btn.prop("disabled", true);
                 }
             }).done(function (data) {
                 console.log(data)
 
             }).always(function (){
-                setInterval(function (){
-                    $btn.find("span").removeClass("fa-spinner fa fa-spin fa-large");
+                setTimeout(function (){
+                    $btn.find("span")
+                        .removeClass("fa-spinner fa fa-spin fa-large")
+                        .addClass("fa fa-check-circle text-success");
                     $btn.prop("disabled", false);
                 }, 2000);
             });
