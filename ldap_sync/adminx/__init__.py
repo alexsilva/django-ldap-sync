@@ -1,8 +1,8 @@
 import logging
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site
-from .models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 
 User = get_user_model()
 
