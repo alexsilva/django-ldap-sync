@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-03 18:10-0300\n"
+"POT-Creation-Date: 2022-02-08 15:35-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,120 +18,156 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: .\ldap_sync\adminx.py:18 .\ldap_sync\models.py:49
+#: ldap_sync/adminx/__init__.py:30 ldap_sync/models.py:86
 msgid "Level"
 msgstr "Nível"
 
-#: .\ldap_sync\apps.py:7
+#: ldap_sync/apps.py:7
 msgid "Ldap sync"
 msgstr "Sincronização do Ldap"
 
-#: .\ldap_sync\models.py:13
+#: ldap_sync/models.py:18 ldap_sync/models.py:43
 msgid "User"
 msgstr "Usuário"
 
-#: .\ldap_sync\models.py:14
+#: ldap_sync/models.py:19
+msgid "domain inclusion required 'domain\\username'"
+msgstr "Necessário a inclusão do domínio 'domain\\username'"
+
+#: ldap_sync/models.py:20
+msgid "Password"
+msgstr "Senha"
+
+#: ldap_sync/models.py:21
+msgid "Server URI"
+msgstr "URI do servidor"
+
+#: ldap_sync/models.py:22
+msgid "User domain"
+msgstr "Total de usuários"
+
+#: ldap_sync/models.py:25
+msgid "Options"
+msgstr "Opções"
+
+#: ldap_sync/models.py:28
+msgid "Order"
+msgstr "Ordem"
+
+#: ldap_sync/models.py:31 ldap_sync/models.py:44
+msgid "LDAP Account"
+msgstr "Conta LDAP"
+
+#: ldap_sync/models.py:32
+msgid "LDAP Accounts"
+msgstr "Contas LDAP"
+
+#: ldap_sync/models.py:47
+msgid "Is active"
+msgstr "Ativo"
+
+#: ldap_sync/models.py:49
 msgid "Account name"
 msgstr "Nome da conta"
 
-#: .\ldap_sync\models.py:16
+#: ldap_sync/models.py:51
 msgid "Data"
 msgstr "Dados"
 
-#: .\ldap_sync\models.py:25
+#: ldap_sync/models.py:60
 msgid "Ldap User"
 msgstr "Usuário ldap"
 
-#: .\ldap_sync\models.py:26
+#: ldap_sync/models.py:61
 msgid "Ldap Users"
 msgstr "Usuários ldap"
 
-#: .\ldap_sync\models.py:32
+#: ldap_sync/models.py:67
 msgid "Sync date"
 msgstr "Data da sincronização"
 
-#: .\ldap_sync\models.py:33
+#: ldap_sync/models.py:68
 msgid "Status"
 msgstr "Estado"
 
-#: .\ldap_sync\models.py:34
+#: ldap_sync/models.py:69
 msgid "Synchronizing"
 msgstr "Sincronizando"
 
-#: .\ldap_sync\models.py:37
+#: ldap_sync/models.py:72
 msgid "Total"
 msgstr "Total"
 
-#: .\ldap_sync\models.py:43
+#: ldap_sync/models.py:79
 msgid "Log"
 msgstr "Registro"
 
-#: .\ldap_sync\models.py:44
+#: ldap_sync/models.py:80
 msgid "Logs"
 msgstr "Registros"
 
-#: .\ldap_sync\models.py:50
+#: ldap_sync/models.py:87
 msgid "Text"
 msgstr "Texto"
 
-#: .\ldap_sync\models.py:57
+#: ldap_sync/models.py:94
 msgid "Log Info"
 msgstr "Informação de registro"
 
-#: .\ldap_sync\models.py:58
+#: ldap_sync/models.py:95
 msgid "Log Infos"
 msgstr "Informações de registro"
 
-#: .\ldap_sync\templates\ldap_sync\includes\form_status.html:5
+#: ldap_sync/templates/ldap_sync/includes/form_status.html:5
 msgid "Sync ldap users"
 msgstr "Sincronizar usuários ldap"
 
-#: .\ldap_sync\templates\ldap_sync\includes\form_status.html:7
-#: .\ldap_sync\views.py:82
+#: ldap_sync/templates/ldap_sync/includes/form_status.html:7
+#: ldap_sync/views.py:82
 msgid "celery: unavailable service"
 msgstr "celery: serviço indisponível"
 
-#: .\ldap_sync\templates\ldap_sync\index.html:8
+#: ldap_sync/templates/ldap_sync/index.html:8
 msgid "LDAP Sync"
 msgstr "LDAP Sicronização"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:8
+#: ldap_sync/templates/ldap_sync/status.html:8
 msgid "LDAP Sync Status"
 msgstr "LDAP Estado da Sicronização"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:24
+#: ldap_sync/templates/ldap_sync/status.html:24
 msgid "PROGRESS"
 msgstr "PROGRESSO"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:25
+#: ldap_sync/templates/ldap_sync/status.html:25
 msgid "READY"
 msgstr "PRONTO"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:26
+#: ldap_sync/templates/ldap_sync/status.html:26
 msgid "FAILED"
 msgstr "FALHOU"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:27
+#: ldap_sync/templates/ldap_sync/status.html:27
 msgid "RESULT"
 msgstr "RESULTADO"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:74
-#: .\ldap_sync\templates\ldap_sync\status.html:105
+#: ldap_sync/templates/ldap_sync/status.html:74
+#: ldap_sync/templates/ldap_sync/status.html:105
 msgid "Sync failed"
 msgstr "Falha na sincronização"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:78
+#: ldap_sync/templates/ldap_sync/status.html:78
 msgid "Success"
 msgstr "Sucesso"
 
-#: .\ldap_sync\templates\ldap_sync\status.html:80
+#: ldap_sync/templates/ldap_sync/status.html:80
 msgid "Synchronizing..."
 msgstr "Sincronizando..."
 
-#: .\ldap_sync\views.py:72
+#: ldap_sync/views.py:72
 msgid "Sync error"
 msgstr "Erro na sincronização"
 
-#: .\ldap_sync\views.py:77
+#: ldap_sync/views.py:77
 msgid "User count"
 msgstr "Total de usuários"
