@@ -1,6 +1,7 @@
 # coding=utf-8
 import configparser
 import io
+from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -75,5 +76,5 @@ class ConfigTextField(models.TextField):
 		if self.sections is not None:
 			sections = config.sections()
 			if [s for s in self.sections if s in sections] != self.sections:
-				raise ValidationError("missing sections %(sections)s" % {'sections': self.sections})
+				raise ValidationError(_("missing sections %(sections)s") % {'sections': self.sections})
 		return config
