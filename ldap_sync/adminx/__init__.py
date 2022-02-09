@@ -4,14 +4,13 @@ import django.forms as django_forms
 import logging
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-from ldap_sync.adminx.forms import LdapAccountForm
+from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
 from ldap_sync.adminx.plugins import LdapUserMigrationPlugin
 from ldap_sync.adminx.views import LdapUserMigrationView
-from ldap_sync.fields.encrypted import EncryptedCharField
 from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
-from xadmin.views import ModelFormAdminView
+from xadmin.views import ModelFormAdminView, UpdateAdminView
 
 User = get_user_model()
 
@@ -68,7 +67,6 @@ class LdapObjectAdmin(object):
 
 @sites.register(LdapAccount)
 class LdapAccountAdmin(object):
-	form = LdapAccountForm
 	fields = (
 		'username',
 		'password',
@@ -82,11 +80,14 @@ class LdapAccountAdmin(object):
 		'__str__',
 		'order'
 	)
+
+	def get_model_form(self, **kwargs):
+		kwargs['form'] = LdapAccountForm
+		if isinstance(self, UpdateAdminView) and self.org_obj:
+			kwargs['form'] = LdapAccountChangeForm
+		return super().get_model_form(**kwargs)
+
 	formfield_overrides = {
-		EncryptedCharField: {
-			'widget': django_forms.PasswordInput(render_value=True),
-			'strip': False
-		},
 		django_models.TextField: {
 			'widget': django_forms.Textarea(attrs={'rows': 25}),
 		}

@@ -1,5 +1,7 @@
 # coding=utf-8
 import django.forms as django_forms
+from django.utils.translation import gettext_lazy as _
+from ldap_sync.forms.fields import LdapReadOnlyPasswordHashField
 
 
 class LdapAccountForm(django_forms.ModelForm):
@@ -16,3 +18,13 @@ class LdapAccountForm(django_forms.ModelForm):
 		if not _:
 			raise django_forms.ValidationError("Forneça um nome de usuário válido.")
 		return username
+
+
+class LdapAccountChangeForm(LdapAccountForm):
+	password = LdapReadOnlyPasswordHashField(label=_("Password"))
+
+	def clean_password(self):
+		# Regardless of what the user provides, return the initial value.
+		# This is done here, rather than on the field, because the
+		# field does not have access to the initial value
+		return self.initial.get('password')
