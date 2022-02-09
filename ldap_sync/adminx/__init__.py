@@ -10,7 +10,7 @@ from ldap_sync.adminx.views import LdapUserMigrationView, LdapChangePasswordView
 from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
-from xadmin.views import ModelFormAdminView, UpdateAdminView, CreateAdminView
+from xadmin.views import ModelFormAdminView, UpdateAdminView, CreateAdminView, DetailAdminView
 
 User = get_user_model()
 
@@ -68,6 +68,13 @@ class LdapObjectAdmin(object):
 @sites.register(LdapAccount)
 class LdapAccountAdmin(object):
 	password_change_fields = ('password',)
+	form_detail_fields = (
+		'username',
+		'uri',
+		'domain',
+		'order',
+		'options'
+	)
 	fields = (
 		'username',
 		'password',
@@ -87,6 +94,8 @@ class LdapAccountAdmin(object):
 			self.form = LdapAccountForm
 		elif isinstance(self, UpdateAdminView) and self.org_obj:
 			self.form = LdapAccountChangeForm
+		elif isinstance(self, DetailAdminView):
+			kwargs['fields'] = self.form_detail_fields
 		return super().get_model_form(**kwargs)
 
 	formfield_overrides = {
