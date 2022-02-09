@@ -59,7 +59,9 @@ class FernetPasswordHasher(BasePasswordHasher):
 	def safe_summary(self, encoded):
 		algorithm, token = encoded.split("$", 1)
 		assert algorithm == self.algorithm
+		mask_show = 6
+		mask_max = len(token[mask_show:])
 		return OrderedDict([
 			(_('algorithm'), algorithm),
-			(_('hash'), mask_hash(token)),
+			(_('hash'), mask_hash(token, show=mask_show)[:int(mask_max * 0.25)]),
 		])
