@@ -10,7 +10,7 @@ from ldap_sync.adminx.views import LdapUserMigrationView
 from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
-from xadmin.views import ModelFormAdminView, UpdateAdminView
+from xadmin.views import ModelFormAdminView, UpdateAdminView, CreateAdminView
 
 User = get_user_model()
 
@@ -82,8 +82,9 @@ class LdapAccountAdmin(object):
 	)
 
 	def get_model_form(self, **kwargs):
-		kwargs['form'] = LdapAccountForm
-		if isinstance(self, UpdateAdminView) and self.org_obj:
+		if isinstance(self, CreateAdminView):
+			kwargs['form'] = LdapAccountForm
+		elif isinstance(self, UpdateAdminView) and self.org_obj:
 			kwargs['form'] = LdapAccountChangeForm
 		return super().get_model_form(**kwargs)
 
