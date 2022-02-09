@@ -61,7 +61,9 @@ class LdapChangePasswordView(UpdateAdminView):
 		return context
 
 	def block_submit_more_btns(self, context, nodes):
-		nodes.append(render_to_string("ldap_sync/adminx/submit_line.html"))
+		nodes.append(render_to_string("ldap_sync/adminx/submit_line.html", context={
+			'model_edit_url': self.get_model_url(self.model, "change", self.org_obj.pk)
+		}))
 
 	def post_response(self):
 		_ = super().post_response()
