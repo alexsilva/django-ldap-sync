@@ -66,6 +66,8 @@ class LdapChangePasswordView(UpdateAdminView):
 		}))
 
 	def post_response(self):
-		_ = super().post_response()
+		response = super().post_response()
 		# Returns to the model editing screen.
-		return self.get_model_url(self.model, "change", self.org_obj.pk)
+		if isinstance(response, str):
+			response = self.get_model_url(self.model, "change", self.org_obj.pk)
+		return response
