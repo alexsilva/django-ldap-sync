@@ -3,7 +3,7 @@ import base64
 from collections import OrderedDict
 
 from django.conf import settings
-from django.contrib.auth.hashers import BasePasswordHasher
+from django.contrib.auth.hashers import BasePasswordHasher, mask_hash
 from django.utils.encoding import force_bytes
 from django.utils.translation import gettext_noop as _
 
@@ -61,4 +61,5 @@ class FernetPasswordHasher(BasePasswordHasher):
 		assert algorithm == self.algorithm
 		return OrderedDict([
 			(_('algorithm'), algorithm),
+			(_('hash'), mask_hash(token)),
 		])
