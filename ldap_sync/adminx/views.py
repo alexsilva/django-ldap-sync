@@ -1,9 +1,11 @@
 # coding=utf-8
+from django.utils.translation import ugettext_lazy as _
 import django.forms as django_forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.utils.encoding import force_str
 from django.utils.module_loading import import_string
 from ldap_sync.fields.encrypted import EncryptedCharField
 from ldap_sync.models import LdapAccount
@@ -69,5 +71,9 @@ class LdapChangePasswordView(UpdateAdminView):
 		response = super().post_response()
 		# Returns to the model editing screen.
 		if isinstance(response, str):
+			self.message_user(_("Field %(fields)s successfully changed") % {
+				'fields': ",".join([force_str(self.opts.get_field(field_name).verbose_name).lower()
+				                    for field_name in self.fields])
+			})
 			response = self.get_model_url(self.model, "change", self.org_obj.pk)
 		return response
