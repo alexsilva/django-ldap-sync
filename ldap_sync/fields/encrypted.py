@@ -21,9 +21,9 @@ class EncryptedCharField(models.CharField):
 
 	def to_python(self, value):
 		"""Encrypt database data"""
-		if self.fernet.is_hash(value):
-			return value
 		if value is None:
+			return value
+		if self.fernet.is_hash(value):
 			return value
 		value = self.fernet.encode(value)
 		return value
