@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-08 17:28-0300\n"
+"POT-Creation-Date: 2022-02-09 18:39-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,9 +18,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: ldap_sync/adminx/__init__.py:30 ldap_sync/models.py:86
+#: ldap_sync/adminx/__init__.py:29 ldap_sync/models.py:86
 msgid "Level"
 msgstr "Nível"
+
+#: ldap_sync/adminx/forms.py:24 ldap_sync/models.py:20
+msgid "Password"
+msgstr "Senha"
+
+#: ldap_sync/adminx/views.py:74
+#, python-format
+msgid "Field %(fields)s successfully changed"
+msgstr "Campo %(fields)s alterado com sucesso"
 
 #: ldap_sync/apps.py:7
 msgid "Ldap sync"
@@ -31,6 +40,14 @@ msgstr "Sincronização do Ldap"
 msgid "missing sections %(sections)s"
 msgstr "faltando seções %(sections)s"
 
+#: ldap_sync/hashers.py:54 ldap_sync/hashers.py:65
+msgid "algorithm"
+msgstr "algoritmo"
+
+#: ldap_sync/hashers.py:66
+msgid "hash"
+msgstr "hash"
+
 #: ldap_sync/models.py:18 ldap_sync/models.py:43
 msgid "User"
 msgstr "Usuário"
@@ -38,10 +55,6 @@ msgstr "Usuário"
 #: ldap_sync/models.py:19
 msgid "domain inclusion required 'domain\\username'"
 msgstr "Necessário a inclusão do domínio 'domain\\username'"
-
-#: ldap_sync/models.py:20
-msgid "Password"
-msgstr "Senha"
 
 #: ldap_sync/models.py:21
 msgid "Server URI"
@@ -122,6 +135,14 @@ msgstr "Informação de registro"
 #: ldap_sync/models.py:95
 msgid "Log Infos"
 msgstr "Informações de registro"
+
+#: ldap_sync/templates/ldap_sync/adminx/submit_line.html:3
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ldap_sync/templates/ldap_sync/forms/read_only_password_hash.html:7
+msgid "Change"
+msgstr "Alterar"
 
 #: ldap_sync/templates/ldap_sync/includes/form_status.html:5
 msgid "Sync ldap users"
