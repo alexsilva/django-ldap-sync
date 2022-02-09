@@ -1,10 +1,14 @@
 # coding=utf-8
+import django.forms as django_forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.utils.module_loading import import_string
+from ldap_sync.fields.encrypted import EncryptedCharField
 from ldap_sync.models import LdapAccount
 from ldap_sync.utils import get_setting
+from xadmin.views import UpdateAdminView
 from xadmin.views.base import BaseAdminView
 
 User = get_user_model()
@@ -34,3 +38,32 @@ class LdapUserMigrationView(BaseAdminView):
 		return JsonResponse({
 			'total': queryset.count()
 		})
+
+
+class LdapChangePasswordView(UpdateAdminView):
+	model = LdapAccount
+	fields = ('password',)
+	formfield_overrides = {
+		EncryptedCharField: {
+			'widget': django_forms.PasswordInput,
+			'initial': None
+		}
+	}
+
+	def get_context(self):
+		context = super().get_context()
+		context.update(
+			show_delete_link=False,
+			show_save_as_new=False,
+			show_save_and_add_another=False,
+			show_save_and_continue=False
+		)
+		return context
+
+	def block_submit_more_btns(self, context, nodes):
+		nodes.append(render_to_string("ldap_sync/adminx/submit_line.html"))
+
+	def post_response(self):
+		_ = super().post_response()
+		# Returns to the model editing screen.
+		return self.get_model_url(self.model, "change", self.org_obj.pk)

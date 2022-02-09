@@ -5,8 +5,8 @@ import logging
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
-from ldap_sync.adminx.plugins import LdapUserMigrationPlugin
-from ldap_sync.adminx.views import LdapUserMigrationView
+from ldap_sync.adminx.plugins import LdapUserMigrationPlugin, LdapPasswordChangePlugin
+from ldap_sync.adminx.views import LdapUserMigrationView, LdapChangePasswordView
 from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
@@ -67,6 +67,7 @@ class LdapObjectAdmin(object):
 
 @sites.register(LdapAccount)
 class LdapAccountAdmin(object):
+	password_change_fields = ('password',)
 	fields = (
 		'username',
 		'password',
@@ -83,9 +84,9 @@ class LdapAccountAdmin(object):
 
 	def get_model_form(self, **kwargs):
 		if isinstance(self, CreateAdminView):
-			kwargs['form'] = LdapAccountForm
+			self.form = LdapAccountForm
 		elif isinstance(self, UpdateAdminView) and self.org_obj:
-			kwargs['form'] = LdapAccountChangeForm
+			self.form = LdapAccountChangeForm
 		return super().get_model_form(**kwargs)
 
 	formfield_overrides = {
@@ -95,8 +96,11 @@ class LdapAccountAdmin(object):
 	}
 
 
-site.register_plugin(LdapUserMigrationPlugin, ModelFormAdminView)
 site.register_view(r"^ldap-migration/(\d+)", LdapUserMigrationView, "ldap_migration")
+site.register_view(r"^ldap-password/(\d+)/update", LdapChangePasswordView, "ldap_password_change")
+
+site.register_plugin(LdapUserMigrationPlugin, ModelFormAdminView)
+site.register_plugin(LdapPasswordChangePlugin, UpdateAdminView)
 
 site.register(LdapObject, LdapObjectAdmin)
 site.register(LdapSyncLog, LdapSearchAdmin)
