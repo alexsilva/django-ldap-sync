@@ -38,16 +38,16 @@ if isinstance(service_string, text_types):
 
 class ContextLogger(object):
     def __call__(self, method, *args, **kwargs):
-        def wrapper(self_wrapper, account, *args_wrapper, **options):
+        # noinspection PyBroadException
+        def wrapper(self_wrapper, *args_wrapper, **kwargs_wrapper):
             try:
-                retval = method(self_wrapper, account, *args_wrapper, **options)
-            except:
+                return method(self_wrapper, *args_wrapper, **kwargs_wrapper)
+            except Exception as exc:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
                 self_wrapper.logger.error(stream.getvalue())
-                raise
-            self_wrapper.logger.set_status(True)
-            return retval
+            finally:
+                self_wrapper.logger.set_status(True)
         return wrapper
 
 
@@ -398,13 +398,11 @@ class Command(BaseCommand):
     can_import_settings = True
     help = 'Synchronize users and groups from an authoritative LDAP server'
     ldap_account_model = LdapAccount
-
-    def __init__(self, *args, **kwargs):
-        super(Command, self).__init__(*args, **kwargs)
-        self.logger = Logger()
+    logger = None
 
     def handle(self, *args, **options):
         for account in self.ldap_account_model.objects.all():
+            self.logger = Logger(account)
             self.handle_user_sync(account)
 
     @ContextLogger()

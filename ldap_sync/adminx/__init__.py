@@ -32,8 +32,8 @@ class LdapSearchInline(object):
 	level_text_show.is_column = True
 
 
-class LdapSearchAdmin(object):
-	""""""
+class LdapSearchLogAdmin(object):
+	"""Search admin log"""
 	refresh_times = range(15, 61, 15)
 
 	inlines = (LdapSearchInline,)
@@ -45,6 +45,7 @@ class LdapSearchAdmin(object):
 	)
 	list_display = (
 		"created",
+		"account",
 		"synchronizing",
 		"total",
 		"status"
@@ -116,4 +117,4 @@ site.register_plugin(LdapUserMigrationPlugin, ModelFormAdminView)
 site.register_plugin(LdapPasswordChangePlugin, UpdateAdminView)
 
 site.register(LdapObject, LdapObjectAdmin)
-site.register(LdapSyncLog, LdapSearchAdmin)
+site.register(LdapSyncLog, LdapSearchLogAdmin)

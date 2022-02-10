@@ -63,8 +63,10 @@ class LdapObject(models.Model):
 
 class LdapSyncLog(models.Model):
     """Synchronization process logs"""
-
     created = models.DateTimeField(_("Sync date"), auto_now_add=True)
+    account = models.ForeignKey(LdapAccount, verbose_name=_("LDAP Account"),
+                                on_delete=models.CASCADE,
+                                null=True)
     status = models.BooleanField(_("Status"), default=False)
     synchronizing = models.BooleanField(_("Synchronizing"), default=False)
 
