@@ -40,14 +40,16 @@ class ContextLogger(object):
     def __call__(self, method, *args, **kwargs):
         # noinspection PyBroadException
         def wrapper(self_wrapper, *args_wrapper, **kwargs_wrapper):
+            status = True
             try:
                 return method(self_wrapper, *args_wrapper, **kwargs_wrapper)
             except Exception as exc:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
                 self_wrapper.logger.error(stream.getvalue())
+                status = False
             finally:
-                self_wrapper.logger.set_status(True)
+                self_wrapper.logger.set_status(status)
         return wrapper
 
 
