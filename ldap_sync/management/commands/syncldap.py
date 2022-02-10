@@ -5,7 +5,6 @@ import json
 import mimetypes
 import traceback
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
@@ -19,6 +18,7 @@ from ldap_sync.models import LdapObject, LdapAccount
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import DEFAULT_ENCODING
 from ldap_sync.utils import get_setting
+import functools
 
 try:
     import slugify
@@ -39,6 +39,7 @@ if isinstance(service_string, text_types):
 class ContextLogger(object):
     def __call__(self, method, *args, **kwargs):
         # noinspection PyBroadException
+        @functools.wraps(method)
         def wrapper(self_wrapper, *args_wrapper, **kwargs_wrapper):
             status = True
             try:
