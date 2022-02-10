@@ -40,6 +40,7 @@ class LdapSearchLogAdmin(object):
 	inlines = (LdapSearchInline,)
 	readonly_fields = ["synchronizing", "total", "status"]
 	list_filter = (
+		"account",
 		"synchronizing",
 		"created",
 		"status"
@@ -55,11 +56,15 @@ class LdapSearchLogAdmin(object):
 
 @sites.register(LdapObject)
 class LdapObjectAdmin(object):
-	""""""
+	"""Ldap search object"""
 	search_fields = (
 		"user__username",
 		"user__first_name",
 		"user__last_name",
+		"account__username",
+	)
+	list_filter = (
+		"account",
 	)
 	list_display = (
 		"user",
