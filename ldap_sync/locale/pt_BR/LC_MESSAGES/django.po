@@ -74,11 +74,11 @@ msgstr "Ordem"
 
 #: ldap_sync/models.py:31 ldap_sync/models.py:44
 msgid "LDAP Account"
-msgstr "Conta LDAP"
+msgstr "Conta ldap"
 
 #: ldap_sync/models.py:32
 msgid "LDAP Accounts"
-msgstr "Contas LDAP"
+msgstr "Contas ldap"
 
 #: ldap_sync/models.py:47
 msgid "Is active"
