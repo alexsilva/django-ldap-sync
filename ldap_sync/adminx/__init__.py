@@ -48,8 +48,8 @@ class LdapSearchLogAdmin(object):
 	list_display = (
 		"created",
 		"account",
-		"synchronizing",
 		"total",
+		"synchronizing",
 		"status"
 	)
 
