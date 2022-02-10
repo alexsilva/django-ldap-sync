@@ -32,6 +32,7 @@ class LdapSearchInline(object):
 	level_text_show.is_column = True
 
 
+@sites.register(LdapSyncLog)
 class LdapSearchLogAdmin(object):
 	"""Search admin log"""
 	refresh_times = range(15, 61, 15)
@@ -52,6 +53,7 @@ class LdapSearchLogAdmin(object):
 	)
 
 
+@sites.register(LdapObject)
 class LdapObjectAdmin(object):
 	""""""
 	search_fields = (
@@ -115,6 +117,3 @@ site.register_view(r"^ldap-password/(\d+)/update", LdapChangePasswordView, "ldap
 
 site.register_plugin(LdapUserMigrationPlugin, ModelFormAdminView)
 site.register_plugin(LdapPasswordChangePlugin, UpdateAdminView)
-
-site.register(LdapObject, LdapObjectAdmin)
-site.register(LdapSyncLog, LdapSearchLogAdmin)
