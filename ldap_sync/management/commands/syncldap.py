@@ -38,16 +38,16 @@ if isinstance(service_string, text_types):
 
 class ContextLogger(object):
     def __call__(self, method, *args, **kwargs):
-        def wrapper(this, *_args, **_kwargs):
+        def wrapper(self_wrapper, account, *args_wrapper, **options):
             try:
-                method_result = method(this, *_args, **_kwargs)
+                retval = method(self_wrapper, account, *args_wrapper, **options)
             except:
                 stream = StringIO()
                 traceback.print_exc(file=stream)
-                this.logger.error(stream.getvalue())
+                self_wrapper.logger.error(stream.getvalue())
                 raise
-            this.logger.set_status(True)
-            return method_result
+            self_wrapper.logger.set_status(True)
+            return retval
         return wrapper
 
 
