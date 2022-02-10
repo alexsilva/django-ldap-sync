@@ -38,7 +38,12 @@ class LdapSearchLogAdmin(object):
 	refresh_times = range(15, 61, 15)
 
 	inlines = (LdapSearchInline,)
-	readonly_fields = ["synchronizing", "total", "status"]
+	readonly_fields = (
+		"account",
+		"total",
+		"synchronizing",
+		"status"
+	)
 	list_filter = (
 		"account",
 		"synchronizing",
