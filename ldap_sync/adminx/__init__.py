@@ -63,6 +63,7 @@ class LdapSearchLogAdmin(object):
 class LdapObjectAdmin(object):
 	"""Ldap search object"""
 	search_fields = (
+		"account_name",
 		"user__username",
 		"user__first_name",
 		"user__last_name",
@@ -70,6 +71,7 @@ class LdapObjectAdmin(object):
 	)
 	list_filter = (
 		"account",
+		"is_active"
 	)
 	list_display = (
 		"user",
