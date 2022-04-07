@@ -31,7 +31,7 @@ class LdapUserMigrationView(BaseAdminView):
 		# noinspection PyBroadException
 		try:
 			account_id = self.opts.pk.to_python(account_id)
-			logger.info("starting user migration to account %d" % account_id)
+			logger.info("starting user migration to account: %d" % account_id)
 			count = int(call_command("syncldap_migrate", account_id=account_id, stdout=stdout))
 			logger.info(stdout.getvalue().strip('\n '))
 			logger.info("migrated %d users" % count)
