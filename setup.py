@@ -22,7 +22,6 @@ setup(
     include_package_data=True,
     install_requires=[],
     classifiers=[
-        'Development Status :: 5 - Alpha',
         'Environment :: Web Environment',
         'Programming Language :: Python',
         'Framework :: Django',
