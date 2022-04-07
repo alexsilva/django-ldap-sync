@@ -16,7 +16,7 @@ from ldap_sync.models import LdapAccount
 
 User = get_user_model()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ldapsync")
 
 
 class LdapUserMigrationView(BaseAdminView):
@@ -31,10 +31,14 @@ class LdapUserMigrationView(BaseAdminView):
 		# noinspection PyBroadException
 		try:
 			account_id = self.opts.pk.to_python(account_id)
+			logger.info("starting user migration to account %d" % account_id)
 			count = int(call_command("syncldap_migrate", account_id=account_id, stdout=stdout))
-			logger.info(stdout.getvalue())
+			output = stdout.getvalue()
+			if output.strip('\n '):
+				logger.info(stdout.getvalue())
+			logger.info("migrated %d users" % count)
 		except Exception as exc:
-			logger.exception("migrate user account: %d" % account_id)
+			logger.exception("migrate user account: %s" % account_id)
 			logger.info(stdout.getvalue())
 			count = 0
 		return JsonResponse({
