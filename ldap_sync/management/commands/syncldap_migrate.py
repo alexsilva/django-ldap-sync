@@ -14,6 +14,7 @@ class Command(BaseCommand):
 	migrate existing user to an account
 	"""
 	account_model = LdapAccount
+	account_opts = account_model._meta
 
 	def add_arguments(self, parser):
 		parser.add_argument('--account-id', type=int, help="Account id",
@@ -21,9 +22,8 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **options):
 		account_id = options['account_id']
-		opts = self.account_model._meta
 
-		pk = opts.pk.to_python(account_id)
+		pk = self.account_opts.pk.to_python(account_id)
 		account = self.account_model.objects.get(pk=pk)
 
 		queryset = User.objects.filter(ldapobject__isnull=False)
