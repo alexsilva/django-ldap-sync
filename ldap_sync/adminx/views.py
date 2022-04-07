@@ -1,44 +1,44 @@
 # coding=utf-8
-from django.utils.translation import ugettext_lazy as _
+import logging
+import io
 import django.forms as django_forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.encoding import force_str
-from django.utils.module_loading import import_string
-from ldap_sync.fields.encrypted import EncryptedCharField
-from ldap_sync.models import LdapAccount
-from ldap_sync.utils import get_setting
+from django.utils.translation import ugettext_lazy as _
 from xadmin.views import UpdateAdminView
 from xadmin.views.base import BaseAdminView
+from django.core.management import call_command
+from ldap_sync.fields.encrypted import EncryptedCharField
+from ldap_sync.models import LdapAccount
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class LdapUserMigrationView(BaseAdminView):
 	"""View que recebe o evento para migração dos usuários"""
-	account_model = LdapAccount
+	model = LdapAccount
+	opts = model._meta
 
 	def post(self, request, account_id, **kwargs):
-		if not self.has_model_perm(self.account_model, "change", self.user):
+		if not self.has_model_perm(self.model, "change", self.user):
 			raise PermissionDenied
-
-		pk = self.account_model._meta.pk.to_python(account_id)
-		account = self.account_model.objects.get(pk=pk)
-
-		queryset = User.objects.filter(ldapobject__isnull=False)
-		user_queryset_callbacks = get_setting('LDAP_SYNC_USER_QUERYSET_CALLBACKS', default=[])
-		for callback in user_queryset_callbacks:
-			callback = import_string(callback)
-			queryset = callback(queryset)
-
-		queryset = queryset.filter(ldapobject__account__isnull=True)
-		for user in queryset:
-			user.ldapobject_set.update(account=account)
-
+		stdout = io.StringIO()
+		# noinspection PyBroadException
+		try:
+			account_id = self.opts.pk.to_python(account_id)
+			count = int(call_command("syncldap_migrate", account_id=account_id, stdout=stdout))
+			logger.info(stdout.getvalue())
+		except Exception as exc:
+			logger.exception("migrate user account: %d" % account_id)
+			logger.info(stdout.getvalue())
+			count = 0
 		return JsonResponse({
-			'total': queryset.count()
+			'total': count
 		})
 
 
