@@ -33,6 +33,7 @@ class Command(BaseCommand):
 			queryset = callback(queryset)
 
 		queryset = queryset.filter(ldapobject__account__isnull=True)
+		queryset = queryset.distinct()
 		for user in queryset:
 			user.ldapobject_set.update(account=account)
 		return str(queryset.count())
