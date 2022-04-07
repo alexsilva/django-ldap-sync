@@ -33,9 +33,7 @@ class LdapUserMigrationView(BaseAdminView):
 			account_id = self.opts.pk.to_python(account_id)
 			logger.info("starting user migration to account %d" % account_id)
 			count = int(call_command("syncldap_migrate", account_id=account_id, stdout=stdout))
-			output = stdout.getvalue()
-			if output.strip('\n '):
-				logger.info(stdout.getvalue())
+			logger.info(stdout.getvalue().strip('\n '))
 			logger.info("migrated %d users" % count)
 		except Exception as exc:
 			logger.exception("migrate user account: %s" % account_id)
