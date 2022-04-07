@@ -35,4 +35,4 @@ class Command(BaseCommand):
 		queryset = queryset.filter(ldapobject__account__isnull=True)
 		for user in queryset:
 			user.ldapobject_set.update(account=account)
-		return queryset.count()
+		return str(queryset.count())
