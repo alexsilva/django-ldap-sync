@@ -38,7 +38,7 @@ class LdapBackend(ModelBackend):
 			domain, username = username.split('\\')
 			domain, username = domain.strip(), username.strip()
 		except ValueError:
-			domain, username = username
+			domain, username = None, username
 		return domain, username
 
 	def get_username_field(self):
