@@ -1,3 +1,4 @@
+# coding=utf-8
 from hashlib import md5
 
 from ldap_sync.utils import DEFAULT_ENCODING

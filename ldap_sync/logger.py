@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta
