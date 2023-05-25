@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
 from ldap_sync.adminx.plugins import LdapUserMigrationPlugin, LdapPasswordChangePlugin
 from ldap_sync.adminx.views import LdapUserMigrationView, LdapChangePasswordView
-from ldap_sync.fields.encrypted import EncryptedCharField
+from fernet_fieldhasher.fields import FernetPasswordHashField
 from ldap_sync.models import LdapAccount
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
@@ -118,7 +118,7 @@ class LdapAccountAdmin(object):
 		django_models.TextField: {
 			'widget': django_forms.Textarea(attrs={'rows': 25}),
 		},
-		EncryptedCharField: {
+		FernetPasswordHashField: {
 			'widget': django_forms.PasswordInput
 		}
 	}

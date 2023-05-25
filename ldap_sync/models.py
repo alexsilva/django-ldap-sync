@@ -6,19 +6,14 @@ from django.utils.formats import date_format
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from ldap_sync.fields.config import ConfigTextField
-
-try:
-    from ldap_sync.fields.encrypted import EncryptedCharField
-except ImportError:
-    # If the dependency doesn't exist use a default charfield
-    EncryptedCharField = models.CharField
+from fernet_fieldhasher.fields import FernetPasswordHashField
 
 
 class LdapAccount(models.Model):
     """Model of LDAP account records"""
     username = models.CharField(verbose_name=_("User"), max_length=256,
                                 help_text=_("domain inclusion required 'domain\\username'"))
-    password = EncryptedCharField(verbose_name=_("Password"), max_length=350)
+    password = FernetPasswordHashField(verbose_name=_("Password"), text_length=350)
     uri = models.CharField(verbose_name=_("Server URI"), max_length=350)
     domain = models.CharField(verbose_name=_("User domain"),
                               max_length=128,

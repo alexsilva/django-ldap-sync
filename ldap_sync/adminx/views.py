@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from xadmin.views import UpdateAdminView
 from xadmin.views.base import BaseAdminView
 from django.core.management import call_command
-from ldap_sync.fields.encrypted import EncryptedCharField
+from fernet_fieldhasher.fields import FernetPasswordHashField
 from ldap_sync.models import LdapAccount
 
 User = get_user_model()
@@ -48,7 +48,7 @@ class LdapChangePasswordView(UpdateAdminView):
 	model = LdapAccount
 	fields = ('password',)
 	formfield_overrides = {
-		EncryptedCharField: {
+		FernetPasswordHashField: {
 			'widget': django_forms.PasswordInput,
 			'initial': None
 		}
