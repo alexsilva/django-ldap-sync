@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.formats import date_format
 from django.utils.text import Truncator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from ldap_sync.fields.config import ConfigTextField
 from ldap_sync.fields.encrypted import EncryptedHashField
 

@@ -3,7 +3,7 @@ import django.db.models as django_models
 import django.forms as django_forms
 import logging
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
 from ldap_sync.adminx.plugins import LdapUserMigrationPlugin, LdapPasswordChangePlugin
 from ldap_sync.adminx.views import LdapUserMigrationView, LdapChangePasswordView

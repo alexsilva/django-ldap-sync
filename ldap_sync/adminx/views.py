@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.encoding import force_str
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from xadmin.views import UpdateAdminView
 from xadmin.views.base import BaseAdminView
 from django.core.management import call_command
