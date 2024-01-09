@@ -15,7 +15,7 @@ def get_setting(name, default=None, strict=False):
     return getattr(settings, name, default)
 
 
-class CeleryWorker(object):
+class CeleryWorker:
     ERROR_KEY = "ERROR"
 
     @classmethod

@@ -3,7 +3,7 @@ class LdapSearchException(Exception):
     """"""
 
 
-class LdapSearch(object):
+class LdapSearch:
     """User search interface and ldap groups"""
 
     def __init__(self, uri):

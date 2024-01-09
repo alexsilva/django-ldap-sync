@@ -16,7 +16,7 @@ from xadmin.views import ModelFormAdminView, UpdateAdminView, CreateAdminView, D
 User = get_user_model()
 
 
-class LdapSearchInline(object):
+class LdapSearchInline:
 	model = LdapSyncLogMeta
 	exclude = ("level",)
 	readonly_fields = ['level_text_show', 'text']
@@ -33,7 +33,7 @@ class LdapSearchInline(object):
 
 
 @sites.register(LdapSyncLog)
-class LdapSearchLogAdmin(object):
+class LdapSearchLogAdmin:
 	"""Search admin log"""
 	refresh_times = range(15, 61, 15)
 
@@ -60,7 +60,7 @@ class LdapSearchLogAdmin(object):
 
 
 @sites.register(LdapObject)
-class LdapObjectAdmin(object):
+class LdapObjectAdmin:
 	"""Ldap search object"""
 	search_fields = (
 		"account_name",
@@ -82,7 +82,7 @@ class LdapObjectAdmin(object):
 
 
 @sites.register(LdapAccount)
-class LdapAccountAdmin(object):
+class LdapAccountAdmin:
 	password_change_fields = ('password',)
 	form_detail_fields = (
 		'username',

@@ -36,7 +36,7 @@ if isinstance(service_string, text_types):
     LdapSearch = import_string(service_string)
 
 
-class ContextLogger(object):
+class ContextLogger:
     def __call__(self, method, *args, **kwargs):
         # noinspection PyBroadException
         @functools.wraps(method)
@@ -54,7 +54,7 @@ class ContextLogger(object):
         return wrapper
 
 
-class UserSync(object):
+class UserSync:
     """
     Intermediate layer of synchronization
     """

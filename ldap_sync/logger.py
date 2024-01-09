@@ -4,7 +4,7 @@ import logging
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta
 
 
-class Logger(object):
+class Logger:
     def __init__(self, account=None):
         self.slog = LdapSyncLog.objects.create(account=account)
 
