@@ -12,9 +12,10 @@ from django.db import DataError
 from django.db import IntegrityError
 from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
+from ldap_sync.callbacks import user_log_message
 from io import StringIO
 from ldap_sync.logger import Logger
-from ldap_sync.models import LdapObject, LdapAccount, LdapObjectLog
+from ldap_sync.models import LdapObject, LdapAccount
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import DEFAULT_ENCODING
 from ldap_sync.utils import get_setting
@@ -70,8 +71,6 @@ class UserSync:
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
     imagefield_filename_prefix = "ldap-image-"
 
-    user_object_log_model = LdapObjectLog
-
     class InvalidImage(Exception):
         """An exception that occurs when the image is invalid"""
         pass
@@ -108,14 +107,10 @@ class UserSync:
 
         self.magic = magic
 
-    def user_log(self, ldap_object, message, **options):
+    @staticmethod
+    def user_log(ldap_object, message, **options):
         """Creates a log message for the synchronized user"""
-        max_length = self.user_object_log_model._meta.get_field('message').max_length
-        text_truncated = len(message) > max_length
-        return self.user_object_log_model.objects.create(
-            ldap_object=ldap_object,
-            message=message[:max_length - (3 if text_truncated else 0)] + ("..." if text_truncated else ""),
-            **options)
+        return user_log_message(ldap_object, message, **options)
 
     def _get_field_types(self):
         """Extracts the type of user field

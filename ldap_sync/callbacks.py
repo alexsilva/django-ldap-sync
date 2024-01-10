@@ -40,3 +40,15 @@ def removed_user_delete(user, account):
     """
     # ldapobject is removed together with the user.
     user.delete()
+
+
+def user_log_message(ldap_object, message, **options):
+    """Creates a log message for the synchronized user"""
+    from ldap_sync.models import LdapObjectLog
+    max_length = LdapObjectLog._meta.get_field('message').max_length
+    text_truncated = len(message) > max_length
+    return LdapObjectLog.objects.create(
+        ldap_object=ldap_object,
+        message=message[:max_length - (3 if text_truncated else 0)] + ("..." if text_truncated else ""),
+        **options
+    )
