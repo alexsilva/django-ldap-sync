@@ -70,6 +70,8 @@ class UserSync:
     removed_user_callbacks = list(get_setting('LDAP_SYNC_REMOVED_USER_CALLBACKS', default=[]))
     imagefield_filename_prefix = "ldap-image-"
 
+    user_object_log_model = LdapObjectLog
+
     class InvalidImage(Exception):
         """An exception that occurs when the image is invalid"""
         pass
@@ -105,6 +107,13 @@ class UserSync:
             magic = None
 
         self.magic = magic
+
+    def user_log(self, ldap_object, message, **options):
+        """Creates a log message for the synchronized user"""
+        return self.user_object_log_model.objects.create(
+            ldap_object=ldap_object,
+            message=message,
+            **options)
 
     def _get_field_types(self):
         """Extracts the type of user field
