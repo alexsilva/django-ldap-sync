@@ -343,6 +343,7 @@ class UserSync:
                     )
                     self.user_log(ldap_object, "Created user")
                 else:
+                    user_changes = {}
                     for name, ldap_value in defaults.items():
                         try:
                             user_value = getattr(user, name)
@@ -352,16 +353,21 @@ class UserSync:
                             continue
                         if user_value != ldap_value:
                             setattr(user, name, ldap_value)
+                            user_changes[name] = (user_value, ldap_value)
                             user_updated = True
-
-                    if user_updated:
-                        self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
                     ldap_object = self._ldapobject_update(
                         user, attributes,
                         old_username=old_username,
                         user_updated=user_updated
                     )
+
+                    if user_updated:
+                        for field_name in user_changes:
+                            field_values = user_changes[field_name]
+                            self.user_log(ldap_object, f"Changed '{field_name}' "
+                                                       f"from '{field_values[0]}' to '{field_values[1]}'")
+                        self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
