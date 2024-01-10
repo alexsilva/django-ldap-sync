@@ -80,6 +80,12 @@ class LdapObjectAdmin:
 		'is_active'
 	)
 
+	def has_change_permission(self, obj=None):
+		return False
+
+	def has_delete_permission(self, obj=None):
+		return self.user.is_superuser
+
 
 @sites.register(LdapAccount)
 class LdapAccountAdmin:
