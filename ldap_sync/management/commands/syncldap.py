@@ -110,9 +110,11 @@ class UserSync:
 
     def user_log(self, ldap_object, message, **options):
         """Creates a log message for the synchronized user"""
+        max_length = self.user_object_log_model._meta.get_field('message').max_length
+        text_truncated = len(message) > max_length
         return self.user_object_log_model.objects.create(
             ldap_object=ldap_object,
-            message=message,
+            message=message[:max_length - (3 if text_truncated else 0)] + ("..." if text_truncated else ""),
             **options)
 
     def _get_field_types(self):
