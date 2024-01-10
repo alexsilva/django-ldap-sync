@@ -236,14 +236,14 @@ class UserSync:
                 excluded_fields[field_name] = attributes.pop(field_name)
         return attributes, excluded_fields
 
-    def _ldapobject_update(self, user, attributes, **kwargs):
+    def _ldapobject_update(self, user, attributes, **kwargs) -> LdapObject:
         """saves metadata from the synchronized user in the database"""
         attributes, _ = self._exclude_fields(attributes,
                                              names=self.field_types)
         qs = LdapObject.objects.filter(account=self.account,
                                        user=user)
         if not qs.exists():
-            LdapObject.objects.create(
+            return LdapObject.objects.create(
                 account=self.account,
                 user=user,
                 account_name=kwargs['old_username'],
@@ -253,6 +253,7 @@ class UserSync:
                 account_name=kwargs['old_username'],
                 data=json.dumps(attributes)
             )
+            return qs.first()
 
     def execute(self, items):
         """ Synchronize a set of users """
