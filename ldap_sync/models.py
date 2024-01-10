@@ -57,6 +57,21 @@ class LdapObject(models.Model):
         verbose_name_plural = _("Ldap Users")
 
 
+class LdapObjectLog(models.Model):
+    """Log model of changes made to the object"""
+    ldap_object = models.ForeignKey(LdapObject, verbose_name=_("Ldap User"),
+                                    on_delete=models.CASCADE)
+    message = models.CharField(verbose_name=_("Message"), max_length=512)
+    created = models.DateTimeField(verbose_name=_("Created at"), auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.message}'
+
+    class Meta:
+        verbose_name = _("Object change")
+        verbose_name_plural = _("Object changes")
+
+
 class LdapSyncLog(models.Model):
     """Synchronization process logs"""
     created = models.DateTimeField(_("Sync date"), auto_now_add=True)
