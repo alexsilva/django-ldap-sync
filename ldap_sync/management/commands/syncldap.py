@@ -14,7 +14,7 @@ from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
 from io import StringIO
 from ldap_sync.logger import Logger
-from ldap_sync.models import LdapObject, LdapAccount
+from ldap_sync.models import LdapObject, LdapAccount, LdapObjectLog
 from ldap_sync.service import LdapSearch
 from ldap_sync.utils import DEFAULT_ENCODING
 from ldap_sync.utils import get_setting
@@ -334,9 +334,12 @@ class UserSync:
                     self.logger.debug("Created user {0!s}/{1!s}".format(username, old_username))
                     user.set_unusable_password()
                     user.save()
-                    self._ldapobject_update(user, attributes,
-                                            old_username=old_username,
-                                            user_updated=True)
+                    ldap_object = self._ldapobject_update(
+                        user, attributes,
+                        old_username=old_username,
+                        user_updated=True
+                    )
+                    self.user_log(ldap_object, "Created user")
                 else:
                     for name, ldap_value in defaults.items():
                         try:
@@ -352,9 +355,11 @@ class UserSync:
                     if user_updated:
                         self.logger.debug("Updated user {0!s}/{1!s}".format(username, old_username))
 
-                    self._ldapobject_update(user, attributes,
-                                            old_username=old_username,
-                                            user_updated=user_updated)
+                    ldap_object = self._ldapobject_update(
+                        user, attributes,
+                        old_username=old_username,
+                        user_updated=user_updated
+                    )
 
                 for path in self.user_callbacks:
                     callback = import_string(path)
