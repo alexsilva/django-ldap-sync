@@ -3,12 +3,13 @@ import django.db.models as django_models
 import django.forms as django_forms
 import logging
 from django.contrib.auth import get_user_model
+from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
 from ldap_sync.adminx.plugins import LdapUserMigrationPlugin, LdapPasswordChangePlugin
 from ldap_sync.adminx.views import LdapUserMigrationView, LdapChangePasswordView
 from fernet_fieldhasher.fields import FernetPasswordHashField
-from ldap_sync.models import LdapAccount
+from ldap_sync.models import LdapAccount, LdapObjectLog
 from ldap_sync.models import LdapSyncLog, LdapSyncLogMeta, LdapObject
 from xadmin import site, sites
 from xadmin.views import ModelFormAdminView, UpdateAdminView, CreateAdminView, DetailAdminView
@@ -59,9 +60,23 @@ class LdapSearchLogAdmin:
 	)
 
 
+class LdapObjectLogInlineAdmin:
+	model = LdapObjectLog
+	style = 'table'
+	can_delete = False
+	readonly_fields = ('created_display', 'message')
+
+	def created_display(self, instance):
+		return date_format(instance.created, format="DATETIME_FORMAT")
+	created_display.short_description = _("Created at")
+	created_display.admin_order_field = "created"
+	created_display.is_column = True
+
+
 @sites.register(LdapObject)
 class LdapObjectAdmin:
 	"""Ldap search object"""
+	inlines = [LdapObjectLogInlineAdmin]
 	search_fields = (
 		"account_name",
 		"user__username",
