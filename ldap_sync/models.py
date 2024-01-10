@@ -70,6 +70,7 @@ class LdapObjectLog(models.Model):
     class Meta:
         verbose_name = _("Object change")
         verbose_name_plural = _("Object changes")
+        ordering = ['-created']
 
 
 class LdapSyncLog(models.Model):
