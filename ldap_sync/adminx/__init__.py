@@ -3,6 +3,7 @@ import django.db.models as django_models
 import django.forms as django_forms
 import logging
 from django.contrib.auth import get_user_model
+from django.forms import BaseInlineFormSet
 from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 from ldap_sync.adminx.forms import LdapAccountForm, LdapAccountChangeForm
@@ -60,7 +61,18 @@ class LdapSearchLogAdmin:
 	)
 
 
+class LdapObjectInlineFormSet(BaseInlineFormSet):
+	show_max_logs = 50
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# This is only possible because the main model
+		# is not allowed to change, otherwise data would be lost.
+		self.queryset = self.queryset[:self.show_max_logs]
+
+
 class LdapObjectLogInlineAdmin:
+	formset = LdapObjectInlineFormSet
 	model = LdapObjectLog
 	style = 'table'
 	can_delete = False
