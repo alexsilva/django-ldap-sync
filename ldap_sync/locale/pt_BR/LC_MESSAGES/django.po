@@ -2,36 +2,40 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-09 18:39-0300\n"
+"POT-Creation-Date: 2024-01-11 12:02-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Alex <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: ldap_sync/adminx/__init__.py:29 ldap_sync/models.py:86
+#: ldap_sync/adminx/__init__.py:32 ldap_sync/models.py:100
 msgid "Level"
 msgstr "Nível"
 
-#: ldap_sync/adminx/forms.py:24 ldap_sync/models.py:20
+#: ldap_sync/adminx/__init__.py:83 ldap_sync/models.py:65
+msgid "Created at"
+msgstr "Criado em"
+
+#: ldap_sync/adminx/forms.py:24 ldap_sync/models.py:16
 msgid "Password"
 msgstr "Senha"
 
-#: ldap_sync/adminx/views.py:74
+#: ldap_sync/adminx/views.py:76
 #, python-format
 msgid "Field %(fields)s successfully changed"
 msgstr "Campo %(fields)s alterado com sucesso"
 
-#: ldap_sync/apps.py:7
+#: ldap_sync/apps.py:8
 msgid "Ldap sync"
 msgstr "Sincronização do Ldap"
 
@@ -40,99 +44,103 @@ msgstr "Sincronização do Ldap"
 msgid "missing sections %(sections)s"
 msgstr "faltando seções %(sections)s"
 
-#: ldap_sync/hashers.py:54 ldap_sync/hashers.py:65
-msgid "algorithm"
-msgstr "algoritmo"
-
-#: ldap_sync/hashers.py:66
-msgid "hash"
-msgstr "hash"
-
-#: ldap_sync/models.py:18 ldap_sync/models.py:43
+#: ldap_sync/models.py:14 ldap_sync/models.py:39
 msgid "User"
 msgstr "Usuário"
 
-#: ldap_sync/models.py:19
+#: ldap_sync/models.py:15
 msgid "domain inclusion required 'domain\\username'"
 msgstr "Necessário a inclusão do domínio 'domain\\username'"
 
-#: ldap_sync/models.py:21
+#: ldap_sync/models.py:17
 msgid "Server URI"
 msgstr "URI do servidor"
 
-#: ldap_sync/models.py:22
+#: ldap_sync/models.py:18
 msgid "User domain"
 msgstr "Domínio do usuário"
 
-#: ldap_sync/models.py:25
+#: ldap_sync/models.py:21
 msgid "Options"
 msgstr "Opções"
 
-#: ldap_sync/models.py:28
+#: ldap_sync/models.py:24
 msgid "Order"
 msgstr "Ordem"
 
-#: ldap_sync/models.py:31 ldap_sync/models.py:44
+#: ldap_sync/models.py:27 ldap_sync/models.py:40 ldap_sync/models.py:79
 msgid "LDAP Account"
 msgstr "Conta ldap"
 
-#: ldap_sync/models.py:32
+#: ldap_sync/models.py:28
 msgid "LDAP Accounts"
 msgstr "Contas ldap"
 
-#: ldap_sync/models.py:47
+#: ldap_sync/models.py:43
 msgid "Is active"
 msgstr "Ativo"
 
-#: ldap_sync/models.py:49
+#: ldap_sync/models.py:45
 msgid "Account name"
 msgstr "Nome da conta"
 
-#: ldap_sync/models.py:51
+#: ldap_sync/models.py:47
 msgid "Data"
 msgstr "Dados"
 
-#: ldap_sync/models.py:60
+#: ldap_sync/models.py:56 ldap_sync/models.py:62
 msgid "Ldap User"
 msgstr "Usuário ldap"
 
-#: ldap_sync/models.py:61
+#: ldap_sync/models.py:57
 msgid "Ldap Users"
 msgstr "Usuários ldap"
 
-#: ldap_sync/models.py:67
+#: ldap_sync/models.py:64
+msgid "Message"
+msgstr "Mensagem"
+
+#: ldap_sync/models.py:71
+msgid "Object change"
+msgstr "Alteração do objeto"
+
+#: ldap_sync/models.py:72
+msgid "Object changes"
+msgstr "Alterações dos objetos"
+
+#: ldap_sync/models.py:78
 msgid "Sync date"
 msgstr "Data da sincronização"
 
-#: ldap_sync/models.py:68
+#: ldap_sync/models.py:82
 msgid "Status"
 msgstr "Estado"
 
-#: ldap_sync/models.py:69
+#: ldap_sync/models.py:83
 msgid "Synchronizing"
 msgstr "Sincronizando"
 
-#: ldap_sync/models.py:72
+#: ldap_sync/models.py:86
 msgid "Total"
 msgstr "Total"
 
-#: ldap_sync/models.py:79
+#: ldap_sync/models.py:93
 msgid "Log"
 msgstr "Registro"
 
-#: ldap_sync/models.py:80
+#: ldap_sync/models.py:94
 msgid "Logs"
 msgstr "Registros"
 
-#: ldap_sync/models.py:87
+#: ldap_sync/models.py:101
 msgid "Text"
 msgstr "Texto"
 
-#: ldap_sync/models.py:94
+#: ldap_sync/models.py:108
 msgid "Log Info"
 msgstr "Informação de registro"
 
-#: ldap_sync/models.py:95
+#: ldap_sync/models.py:109
 msgid "Log Infos"
 msgstr "Informações de registro"
 
@@ -140,26 +148,22 @@ msgstr "Informações de registro"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ldap_sync/templates/ldap_sync/forms/read_only_password_hash.html:7
-msgid "Change"
-msgstr "Alterar"
-
 #: ldap_sync/templates/ldap_sync/includes/form_status.html:5
 msgid "Sync ldap users"
 msgstr "Sincronizar usuários ldap"
 
 #: ldap_sync/templates/ldap_sync/includes/form_status.html:7
-#: ldap_sync/views.py:82
+#: ldap_sync/views.py:83
 msgid "celery: unavailable service"
 msgstr "celery: serviço indisponível"
 
 #: ldap_sync/templates/ldap_sync/index.html:8
 msgid "LDAP Sync"
-msgstr "LDAP Sicronização"
+msgstr "LDAP Sincronização"
 
 #: ldap_sync/templates/ldap_sync/status.html:8
 msgid "LDAP Sync Status"
-msgstr "LDAP Estado da Sicronização"
+msgstr "LDAP Estado da Sincronização"
 
 #: ldap_sync/templates/ldap_sync/status.html:24
 msgid "PROGRESS"
@@ -190,10 +194,10 @@ msgstr "Sucesso"
 msgid "Synchronizing..."
 msgstr "Sincronizando..."
 
-#: ldap_sync/views.py:72
+#: ldap_sync/views.py:73
 msgid "Sync error"
 msgstr "Erro na sincronização"
 
-#: ldap_sync/views.py:77
+#: ldap_sync/views.py:78
 msgid "User count"
 msgstr "Total de usuários"
