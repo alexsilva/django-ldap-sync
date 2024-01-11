@@ -1,4 +1,6 @@
 # coding=utf-8
+from django.utils import timezone
+
 import django.db.models as django_models
 import django.forms as django_forms
 import logging
@@ -79,7 +81,11 @@ class LdapObjectLogInlineAdmin:
 	readonly_fields = ('created_display', 'message')
 
 	def created_display(self, instance):
-		return date_format(instance.created, format="DATETIME_FORMAT")
+		try:
+			created = timezone.localtime(instance.created)
+		except ValueError:
+			created = instance.created
+		return date_format(created, format="DATETIME_FORMAT")
 	created_display.short_description = _("Created at")
 	created_display.admin_order_field = "created"
 	created_display.is_column = True
