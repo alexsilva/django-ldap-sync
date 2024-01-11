@@ -2,6 +2,12 @@
 from ldap_sync.logger import user_log_message
 
 
+def _user_activation_log(user, queryset):
+    for ldap_object in queryset:
+        activation_info = "activated" if user.is_active else "deactivated"
+        user_log_message(ldap_object, f"The user account has been {activation_info}")
+
+
 def user_active_directory_enabled(user, account, attributes, **kwargs):
     """
     Activate/deactivate user accounts based on Active Directory's
@@ -38,8 +44,11 @@ def removed_user_deactivate(user, account):
     if user.is_active:
         qs = user.ldapobject_set.all()
         qs.filter(account=account).update(is_active=False)
+        user_is_active = user.is_active
         user.is_active = qs.filter(is_active=True).exists()
-        user.save()
+        if user_is_active != user.is_active:
+            user.save()
+            _user_activation_log(user, qs)
 
 
 def removed_user_delete(user, account):
