@@ -8,6 +8,6 @@ class LdapSyncConfig(AppConfig):
 	verbose_name = _("Ldap sync")
 
 	def ready(self):
-		from ldap_sync.signal_register import ready
-
-		ready(self)
+		# from ldap_sync.signal_register import ready
+		# ready(self)
+		...
