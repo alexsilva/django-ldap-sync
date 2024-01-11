@@ -1,4 +1,6 @@
 # coding=utf-8
+from ldap_sync.logger import user_log_message
+
 
 def user_active_directory_enabled(user, account, attributes, **kwargs):
     """
@@ -15,7 +17,11 @@ def user_active_directory_enabled(user, account, attributes, **kwargs):
             updated = not user.is_active
             user.is_active = True
         if updated:
-            user.ldapobject_set.update(is_active=user.is_active)
+            qs = user.ldapobject_set.all()
+            qs.update(is_active=user.is_active)
+            for ldap_object in qs:
+                activation_info = "activated" if user.is_active else "deactivated"
+                user_log_message(ldap_object, f"The user account has been {activation_info}")
         return updated  # updated
     except (KeyError, ValueError):
         pass
