@@ -12,7 +12,7 @@ from django.db import DataError
 from django.db import IntegrityError
 from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
-from ldap_sync.callbacks import user_log_message
+from ldap_sync.logger import user_log_message
 from io import StringIO
 from ldap_sync.logger import Logger
 from ldap_sync.models import LdapObject, LdapAccount
