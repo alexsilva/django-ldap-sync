@@ -28,9 +28,7 @@ def user_active_directory_enabled(user, account, attributes, **kwargs):
         updated = user_is_active != user.is_active
 
         if updated:
-            for ldap_object in qs:
-                activation_info = "activated" if user.is_active else "deactivated"
-                user_log_message(ldap_object, f"The user account has been {activation_info}")
+            _user_activation_log(user, qs)
         return updated  # updated
     except (KeyError, ValueError):
         pass
