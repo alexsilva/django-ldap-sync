@@ -10,15 +10,18 @@ def user_active_directory_enabled(user, account, attributes, **kwargs):
     """
     try:
         user_account_control = int(attributes['userAccountControl'])
+        qs = user.ldapobject_set.all()
+
         if user_account_control & 2:
-            updated = user.is_active
-            user.is_active = False
+            qs.filter(account=account).update(is_active=False)
         else:
-            updated = not user.is_active
-            user.is_active = True
+            qs.filter(account=account).update(is_active=True)
+
+        user_is_active = user.is_active
+        user.is_active = qs.filter(is_active=True).exists()
+        updated = user_is_active != user.is_active
+
         if updated:
-            qs = user.ldapobject_set.all()
-            qs.update(is_active=user.is_active)
             for ldap_object in qs:
                 activation_info = "activated" if user.is_active else "deactivated"
                 user_log_message(ldap_object, f"The user account has been {activation_info}")
